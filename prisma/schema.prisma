@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  theme     String?  @default("light")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  folders   Folder[]
+  knowledgeCards KnowledgeCard[]
+
+  @@map("users")
+}
+
+model Folder {
+  id          String   @id @default(uuid())
+  name        String
+  userId      String
+  parentId    String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      Folder?  @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Folder[] @relation("FolderTree")
+  knowledgeCards KnowledgeCard[]
+
+  @@map("folders")
+  @@index([userId])
+  @@index([parentId])
+  @@index([userId, parentId, order])
+}
+
+model KnowledgeCard {
+  id        String   @id @default(uuid())
+  title     String
+  summary   String?
+  userId    String
+  folderId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder    Folder?           @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  sections  KnowledgeSection[]
+  
+  // Relations pour les liens inline
+  linksFrom InlineReference[] @relation("SourceCard")
+  linksTo   InlineReference[] @relation("TargetCard")
+
+  @@map("knowledge_cards")
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([folderId])
+}
+
+model KnowledgeSection {
+  id              String   @id @default(uuid())
+  title           String
+  content         String
+  contentType     String   @default("text")
+  order           Int      @default(0)
+  knowledgeCardId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  knowledgeCard   KnowledgeCard @relation(fields: [knowledgeCardId], references: [id], onDelete: Cascade)
+  
+  // Relations pour les liens inline
+  linksFrom InlineReference[] @relation("SourceSection")
+  linksTo   InlineReference[] @relation("TargetSection")
+
+  @@map("knowledge_sections")
+  @@index([knowledgeCardId])
+  @@index([knowledgeCardId, order])
+}
+
+// Table pour stocker les liens inline entre fiches/sections
+model InlineReference {
+  id        String   @id @default(uuid())
+  
+  // Source du lien (où est le texte surligné)
+  sourceCardId    String
+  sourceSectionId String?
+  
+  // Cible du lien (fiche/section référencée)
+  targetCardId    String
+  targetSectionId String?
+  
+  // Texte surligné
+  highlightedText String
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  sourceCard    KnowledgeCard     @relation("SourceCard", fields: [sourceCardId], references: [id], onDelete: Cascade)
+  sourceSection KnowledgeSection? @relation("SourceSection", fields: [sourceSectionId], references: [id], onDelete: Cascade)
+  targetCard    KnowledgeCard     @relation("TargetCard", fields: [targetCardId], references: [id], onDelete: Cascade)
+  targetSection KnowledgeSection? @relation("TargetSection", fields: [targetSectionId], references: [id], onDelete: Cascade)
+
+  @@map("inline_references")
+  @@index([sourceCardId])
+  @@index([sourceSectionId])
+  @@index([targetCardId])
+  @@index([targetSectionId])
+  @@index([sourceCardId, targetCardId])
+}
+
