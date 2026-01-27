@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-- **Project Name**: Ju
+- **Project Name**: Cortexa
 - **Type**: Web Application (Monolith)
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript

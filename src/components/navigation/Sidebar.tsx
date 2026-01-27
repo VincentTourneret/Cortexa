@@ -44,7 +44,7 @@ export const Sidebar: React.FC = () => {
           {/* Logo ou titre de l'application */}
           <div className="mb-8 px-4 py-6 flex justify-center items-center">
             <Link href="/">
-              <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+              <Image src="/logo.svg" alt="Cortexa" width={100} height={100} />
             </Link>
           </div>
 
@@ -77,8 +77,8 @@ export const Sidebar: React.FC = () => {
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${isActive
-                      ? "bg-accent text-accent-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                    ? "bg-accent text-accent-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
                     }`}
                 >
                   <Icon className="h-5 w-5" />
