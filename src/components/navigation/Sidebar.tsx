@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { SearchModal } from "@/components/search/SearchModal";
+import Image from "next/image";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Accueil", type: "link" as const },
@@ -41,8 +42,10 @@ export const Sidebar: React.FC = () => {
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 z-40 w-64 flex-col border-r border-border/50 bg-card/80 backdrop-blur-xl">
         <div className="flex flex-col h-full p-4">
           {/* Logo ou titre de l'application */}
-          <div className="mb-8 px-4 py-6">
-            <h1 className="text-2xl font-bold text-foreground">Ju</h1>
+          <div className="mb-8 px-4 py-6 flex justify-center items-center">
+            <Link href="/">
+              <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+            </Link>
           </div>
 
           {/* Navigation principale */}
@@ -73,11 +76,10 @@ export const Sidebar: React.FC = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
-                    isActive
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${isActive
                       ? "bg-accent text-accent-foreground shadow-sm"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>

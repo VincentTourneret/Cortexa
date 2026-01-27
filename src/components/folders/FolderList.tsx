@@ -1,22 +1,31 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import {
   BookOpen,
   Folder as FolderIcon,
-  Loader2,
-  List,
   Grid,
-  EllipsisVertical,
+  List,
+  Loader2,
+  Link as LinkIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -26,446 +35,32 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { FolderBreadcrumb } from "./FolderBreadcrumb";
 import {
-  useFolders,
-  useFolder,
-  useUpdateFolder,
   useDeleteFolder,
+  useFolder,
+  useFolders,
   useReorderFolders,
+  useUpdateFolder,
 } from "@/hooks/api/useFolders";
 import {
   useKnowledgeCards,
   useUpdateKnowledgeCard,
+  useDeleteKnowledgeCard,
+  useReorderKnowledgeCards,
 } from "@/hooks/api/useKnowledgeCards";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  useDroppable,
-  useDraggable,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  useSortable,
-  arrayMove,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-
-type ViewMode = "list" | "grid";
-
-interface Folder {
-  id: string;
-  name: string;
-  parentId: string | null;
-  order: number;
-  children?: Folder[];
-}
+import { useShortcuts } from "@/hooks/api/useShortcuts";
+import { DroppableEmptyState } from "./DroppableEmptyState";
+import { DroppableRoot } from "./DroppableRoot";
+import { FolderBreadcrumb } from "./FolderBreadcrumb";
+import { KnowledgeCardItem } from "./KnowledgeCardItem";
+import { SortableFolder } from "./SortableFolder";
+import { Folder, ViewMode } from "./types";
 
 interface FolderListProps {
   onCreateFolder: (parentId: string | null) => void;
   onParentIdChange?: (parentId: string | null) => void;
   refreshKey?: number;
 }
-
-interface KnowledgeCardSummary {
-  id: string;
-  title: string;
-  summary: string | null;
-  createdAt: string;
-  updatedAt: string;
-  sectionsCount: number;
-}
-
-interface SortableFolderProps {
-  folder: Folder;
-  onClick: () => void;
-  currentParentId: string | null;
-}
-
-interface SortableFolderProps {
-  folder: Folder;
-  onClick: () => void;
-  currentParentId: string | null;
-  overDropZone: string | null;
-  activeId: string | null;
-  viewMode: ViewMode;
-  onRename: (folder: Folder) => void;
-  onDelete: (folder: Folder) => void;
-}
-
-const SortableFolder: React.FC<SortableFolderProps> = ({
-  folder,
-  onClick,
-  currentParentId,
-  overDropZone,
-  activeId,
-  viewMode,
-  onRename,
-  onDelete,
-}) => {
-  // Zone de drop séparée pour le changement de parent (avec un ID différent)
-  const dropId = `drop-${folder.id}`;
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: dropId,
-  });
-
-  // Désactiver le sortable si on survole une zone de drop (n'importe laquelle)
-  const isOverAnyDropZone = overDropZone !== null;
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: folder.id,
-    disabled: isOverAnyDropZone, // Désactiver le réordonnancement quand on survole une zone de drop
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const showDropIndicator = isOver && !isDragging;
-  // Activer pointer-events seulement pendant un drag (et pas pour ce dossier)
-  const isDraggingOther = activeId !== null && activeId !== folder.id;
-
-  // Rendu en mode liste
-  if (viewMode === "list") {
-    return (
-      <div style={style} className="relative h-full">
-        {/* Zone draggable pour le réordonnancement */}
-        <div ref={setNodeRef} className="relative h-full z-10">
-          <Button
-            asChild
-            variant="outline"
-            className="h-auto w-full flex-row items-center justify-start gap-3 p-4 text-left cursor-grab active:cursor-grabbing touch-none"
-          >
-            <div
-              onClick={onClick}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onClick();
-                }
-              }}
-              {...attributes}
-              {...listeners}
-            >
-            <FolderIcon className="h-5 w-5 shrink-0 text-primary" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="truncate font-medium">{folder.name}</span>
-              </div>
-              {folder.children && folder.children.length > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  {folder.children.length} sous-dossier
-                  {folder.children.length > 1 ? "s" : ""}
-                </span>
-              )}
-            </div>
-            <div
-              className="shrink-0"
-              onClick={(event) => event.stopPropagation()}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    aria-label={`Actions pour ${folder.name}`}
-                  >
-                    <EllipsisVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      onRename(folder);
-                    }}
-                  >
-                    Modifier
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      onDelete(folder);
-                    }}
-                  >
-                    Supprimer
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            </div>
-          </Button>
-        </div>
-        {/* Zone de drop pour le changement de parent - active seulement pendant le drag */}
-        <div
-          ref={setDroppableRef}
-          className={`absolute inset-0 z-20 rounded-lg transition-all ${
-            showDropIndicator
-              ? "border-primary border-2 bg-accent/50"
-              : ""
-          }`}
-          style={{ pointerEvents: isDraggingOther ? "auto" : "none" }}
-        >
-          {showDropIndicator && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="text-xs text-primary font-medium bg-background px-2 py-1 rounded shadow-md">
-                Déposer ici pour déplacer dans ce dossier
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Rendu en mode grid (par défaut)
-  return (
-    <div style={style} className="relative h-full">
-      {/* Zone draggable pour le réordonnancement */}
-      <div ref={setNodeRef} className="relative h-full z-10">
-        <Button
-          asChild
-          variant="outline"
-          className="h-auto w-full flex-col items-start gap-2 p-4 text-left cursor-grab active:cursor-grabbing touch-none"
-        >
-          <div
-            onClick={onClick}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onClick();
-              }
-            }}
-            {...attributes}
-            {...listeners}
-          >
-          <div className="flex w-full items-center gap-2">
-            <FolderIcon className="h-5 w-5 shrink-0 text-primary" />
-            <span className="truncate font-medium">{folder.name}</span>
-            <div
-              className="ml-auto shrink-0"
-              onClick={(event) => event.stopPropagation()}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    aria-label={`Actions pour ${folder.name}`}
-                  >
-                    <EllipsisVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      onRename(folder);
-                    }}
-                  >
-                    Modifier
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      onDelete(folder);
-                    }}
-                  >
-                    Supprimer
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          {folder.children && folder.children.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {folder.children.length} sous-dossier
-              {folder.children.length > 1 ? "s" : ""}
-            </span>
-          )}
-          </div>
-        </Button>
-      </div>
-      {/* Zone de drop pour le changement de parent - active seulement pendant le drag */}
-      <div
-        ref={setDroppableRef}
-        className={`absolute inset-0 z-20 rounded-lg transition-all ${
-          showDropIndicator
-            ? "border-primary border-2 bg-accent/50"
-            : ""
-        }`}
-        style={{ pointerEvents: isDraggingOther ? "auto" : "none" }}
-      >
-        {showDropIndicator && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="text-xs text-primary font-medium bg-background px-2 py-1 rounded shadow-md">
-              Déposer ici pour déplacer dans ce dossier
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-interface KnowledgeCardItemProps {
-  card: KnowledgeCardSummary;
-  viewMode: ViewMode;
-  activeId: string | null;
-}
-
-const KnowledgeCardItem: React.FC<KnowledgeCardItemProps> = ({
-  card,
-  viewMode,
-  activeId,
-}) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: `card-${card.id}`,
-    });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    opacity: isDragging ? 0.6 : 1,
-  };
-  const isDraggingOther = activeId !== null && activeId !== `card-${card.id}`;
-
-  if (viewMode === "list") {
-    return (
-      <Button
-        ref={setNodeRef}
-        style={style}
-        asChild
-        variant="outline"
-        className="h-auto w-full flex-row items-center justify-start gap-3 p-4 text-left cursor-grab active:cursor-grabbing touch-none"
-      >
-        <Link
-          href={`/knowledge/${card.id}`}
-          className="w-full"
-          {...listeners}
-          {...attributes}
-          style={{ pointerEvents: isDraggingOther ? "none" : "auto" }}
-        >
-          <BookOpen className="h-5 w-5 shrink-0 text-primary" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="truncate font-medium">{card.title}</span>
-            </div>
-            {card.summary ? (
-              <span className="text-xs text-muted-foreground">
-                {card.summary}
-              </span>
-            ) : null}
-          </div>
-          <div className="shrink-0 text-xs text-muted-foreground">
-            {card.sectionsCount} section
-            {card.sectionsCount > 1 ? "s" : ""}
-          </div>
-        </Link>
-      </Button>
-    );
-  }
-
-  return (
-    <Button
-      ref={setNodeRef}
-      style={style}
-      asChild
-      variant="outline"
-      className="h-auto w-full flex-col items-start gap-2 p-4 text-left cursor-grab active:cursor-grabbing touch-none"
-    >
-      <Link
-        href={`/knowledge/${card.id}`}
-        className="w-full"
-        {...listeners}
-        {...attributes}
-        style={{ pointerEvents: isDraggingOther ? "none" : "auto" }}
-      >
-        <div className="flex w-full items-center gap-2">
-          <BookOpen className="h-5 w-5 shrink-0 text-primary" />
-          <span className="truncate font-medium">{card.title}</span>
-          <span className="ml-auto text-xs text-muted-foreground">
-            {card.sectionsCount}
-          </span>
-        </div>
-        {card.summary ? (
-          <p className="mt-2 text-xs text-muted-foreground">{card.summary}</p>
-        ) : (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Aucune description.
-          </p>
-        )}
-      </Link>
-    </Button>
-  );
-};
-
-interface DroppableRootProps {
-  children: React.ReactNode;
-}
-
-const DroppableRoot: React.FC<DroppableRootProps> = ({ children }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: "root",
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`transition-all rounded-lg ${
-        isOver ? "border-primary border-2 bg-accent" : ""
-      }`}
-    >
-      {children}
-    </div>
-  );
-};
-
-interface DroppableEmptyStateProps {
-  activeId: string | null;
-}
-
-const DroppableEmptyState: React.FC<DroppableEmptyStateProps> = ({
-  activeId,
-}) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: "root",
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`rounded-lg border border-dashed p-12 text-center transition-all ${
-        isOver ? "border-primary border-2 bg-accent" : "border-border"
-      }`}
-    >
-      <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-      <p className="mt-4 text-sm text-muted-foreground">
-        {isOver && activeId
-          ? "Déposer ici pour déplacer à la racine"
-          : "Aucun dossier dans ce répertoire"}
-      </p>
-    </div>
-  );
-};
 
 export const FolderList: React.FC<FolderListProps> = ({
   onCreateFolder,
@@ -475,17 +70,26 @@ export const FolderList: React.FC<FolderListProps> = ({
   const [currentParentId, setCurrentParentId] = useState<string | null>(null);
 
   // Utiliser React Query pour les dossiers et les knowledge cards
-  const { data: folders = [], isLoading: foldersLoading, refetch: refetchFolders } = useFolders(currentParentId);
-  const { data: knowledgeCards = [], isLoading: cardsLoading } = useKnowledgeCards(currentParentId);
+  const {
+    data: folders = [],
+    isLoading: foldersLoading,
+    refetch: refetchFolders,
+  } = useFolders(currentParentId);
+  const { data: knowledgeCards = [], isLoading: cardsLoading } =
+    useKnowledgeCards(currentParentId);
   const { data: currentFolderData } = useFolder(currentParentId || "");
-  
+  const { data: shortcuts = [], isLoading: shortcutsLoading } =
+    useShortcuts(currentParentId);
+
   // Mutations
   const updateFolderMutation = useUpdateFolder();
   const deleteFolderMutation = useDeleteFolder();
   const reorderMutation = useReorderFolders();
+  const reorderCardsMutation = useReorderKnowledgeCards();
   const updateCardMutation = useUpdateKnowledgeCard();
+  const deleteCardMutation = useDeleteKnowledgeCard();
 
-  const loading = foldersLoading || cardsLoading;
+  const loading = foldersLoading || cardsLoading || shortcutsLoading;
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [hasDragged, setHasDragged] = useState(false);
@@ -500,6 +104,8 @@ export const FolderList: React.FC<FolderListProps> = ({
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [isCardDeleteOpen, setIsCardDeleteOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
 
   const sensors = useSensors(
@@ -512,7 +118,8 @@ export const FolderList: React.FC<FolderListProps> = ({
 
   // Extraire le breadcrumb path et le current folder depuis currentFolderData
   const breadcrumbPath = currentFolderData?.path?.slice(0, -1) || [];
-  const currentFolder = currentFolderData?.path?.[currentFolderData.path.length - 1] || null;
+  const currentFolder =
+    currentFolderData?.path?.[currentFolderData.path.length - 1] || null;
 
   const openRenameDialog = (folder: Folder) => {
     setSelectedFolder(folder);
@@ -534,6 +141,16 @@ export const FolderList: React.FC<FolderListProps> = ({
   const closeDeleteDialog = () => {
     setIsDeleteOpen(false);
     setSelectedFolder(null);
+  };
+
+  const openCardDeleteDialog = (cardId: string) => {
+    setSelectedCardId(cardId);
+    setIsCardDeleteOpen(true);
+  };
+
+  const closeCardDeleteDialog = () => {
+    setIsCardDeleteOpen(false);
+    setSelectedCardId(null);
   };
 
   const handleConfirmRename = async () => {
@@ -586,6 +203,24 @@ export const FolderList: React.FC<FolderListProps> = ({
     }
   };
 
+  const handleConfirmCardDelete = async () => {
+    if (!selectedCardId) {
+      return;
+    }
+
+    try {
+      await deleteCardMutation.mutateAsync(selectedCardId);
+      closeCardDeleteDialog();
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la fiche:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la suppression de la fiche"
+      );
+    }
+  };
+
   const handleNavigate = (folderId: string | null) => {
     setCurrentParentId(folderId);
     onParentIdChange?.(folderId);
@@ -601,7 +236,10 @@ export const FolderList: React.FC<FolderListProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-    if (typeof event.active.id === "string" && event.active.id.startsWith("card-")) {
+    if (
+      typeof event.active.id === "string" &&
+      event.active.id.startsWith("card-")
+    ) {
       setActiveCardId(event.active.id);
     } else {
       setActiveCardId(null);
@@ -626,29 +264,58 @@ export const FolderList: React.FC<FolderListProps> = ({
 
     if (draggedFolderId.startsWith("card-")) {
       const cardId = draggedFolderId.replace("card-", "");
-      const targetIsRoot = targetId === "root";
-      const targetIsFolder = targetId.startsWith("drop-");
 
-      if (!targetIsRoot && !targetIsFolder) {
+      // Déplacement vers un dossier ou la racine
+      if (targetId === "root" || targetId.startsWith("drop-")) {
+        const nextFolderId = targetId === "root" ? null : targetId.replace("drop-", "");
+
+        try {
+          await updateCardMutation.mutateAsync({
+            id: cardId,
+            folderId: nextFolderId,
+          });
+        } catch (error) {
+          console.error("Erreur lors du déplacement de la fiche:", error);
+          alert(
+            error instanceof Error
+              ? error.message
+              : "Erreur lors du déplacement de la fiche"
+          );
+        }
         return;
       }
 
-      const nextFolderId = targetIsRoot
-        ? null
-        : targetId.replace("drop-", "");
+      // Réordonnancement entre fiches
+      if (targetId.startsWith("card-")) {
+        const activeCardId = draggedFolderId.replace("card-", "");
+        const targetCardId = targetId.replace("card-", "");
 
-      try {
-        await updateCardMutation.mutateAsync({
-          id: cardId,
-          folderId: nextFolderId,
-        });
-      } catch (error) {
-        console.error("Erreur lors du déplacement de la fiche:", error);
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Erreur lors du déplacement de la fiche"
-        );
+        const activeIndex = knowledgeCards.findIndex((c) => c.id === activeCardId);
+        const targetIndex = knowledgeCards.findIndex((c) => c.id === targetCardId);
+
+        if (activeIndex !== -1 && targetIndex !== -1 && activeIndex !== targetIndex) {
+          const newCards = arrayMove(knowledgeCards, activeIndex, targetIndex);
+          setHasDragged(true);
+
+          try {
+            await reorderCardsMutation.mutateAsync({
+              cardIds: newCards.map((c) => c.id),
+              folderId: currentParentId,
+            });
+          } catch (error) {
+            console.error("Erreur lors du réordonnancement des fiches:", error);
+            alert(
+              error instanceof Error
+                ? error.message
+                : "Erreur lors du réordonnancement des fiches"
+            );
+          } finally {
+            setTimeout(() => {
+              setHasDragged(false);
+            }, 100);
+          }
+        }
+        return;
       }
       return;
     }
@@ -687,7 +354,7 @@ export const FolderList: React.FC<FolderListProps> = ({
     // Si le target commence par "drop-", c'est un changement de parent
     if (targetId.startsWith("drop-")) {
       const targetFolderId = targetId.replace("drop-", "");
-      
+
       // Vérifier que ce n'est pas le même dossier
       if (targetFolderId === draggedFolderId) {
         return;
@@ -791,6 +458,8 @@ export const FolderList: React.FC<FolderListProps> = ({
   }
 
   const folderIds = folders.map((f) => f.id);
+  const cardIds = knowledgeCards.map((c) => `card-${c.id}`);
+  const combinedIds = [...cardIds, ...folderIds];
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -817,7 +486,7 @@ export const FolderList: React.FC<FolderListProps> = ({
               />
             </DroppableRoot>
           </div>
-          
+
           {/* Toggle de vue */}
           <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-1 shrink-0">
             <Button
@@ -841,15 +510,17 @@ export const FolderList: React.FC<FolderListProps> = ({
           </div>
         </div>
 
-        {folders.length === 0 && knowledgeCards.length === 0 ? (
+        {folders.length === 0 &&
+          knowledgeCards.length === 0 &&
+          shortcuts.length === 0 ? (
           <DroppableEmptyState activeId={activeId} />
         ) : (
           <SortableContext
-            items={folderIds}
+            items={combinedIds}
             strategy={
               viewMode === "list"
                 ? verticalListSortingStrategy
-                : verticalListSortingStrategy
+                : rectSortingStrategy
             }
           >
             <div
@@ -865,6 +536,25 @@ export const FolderList: React.FC<FolderListProps> = ({
                   card={card}
                   viewMode={viewMode}
                   activeId={activeId}
+                  onDelete={openCardDeleteDialog}
+                />
+              ))}
+              {shortcuts.map((shortcut) => (
+                <KnowledgeCardItem
+                  key={`shortcut-${shortcut.id}`}
+                  card={{
+                    id: shortcut.card.id,
+                    title: shortcut.card.title,
+                    summary: shortcut.card.summary,
+                    createdAt: shortcut.card.createdAt,
+                    updatedAt: shortcut.card.updatedAt,
+                    sectionsCount: shortcut.card._count.sections,
+                    color: shortcut.card.color,
+                  }}
+                  viewMode={viewMode}
+                  activeId={activeId}
+                  isShortcut={true}
+                  onDelete={() => { }} // Les raccourcis ne sont pas gérés ici pour l'instant
                 />
               ))}
               {folders.map((folder) => (
@@ -959,6 +649,34 @@ export const FolderList: React.FC<FolderListProps> = ({
               Annuler
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isCardDeleteOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setIsCardDeleteOpen(true);
+            return;
+          }
+          closeCardDeleteDialog();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer la fiche</DialogTitle>
+            <DialogDescription>
+              Cette action est irréversible. La fiche sera supprimée
+              définitivement.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={closeCardDeleteDialog}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmCardDelete}>
               Supprimer
             </Button>
           </DialogFooter>

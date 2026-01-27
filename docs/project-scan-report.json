@@ -1,0 +1,69 @@
+{
+    "workflow_version": "1.2.0",
+    "timestamps": {
+        "started": "2026-01-23T18:38:02+01:00",
+        "last_updated": "2026-01-23T18:42:00+01:00"
+    },
+    "mode": "initial_scan",
+    "scan_level": "deep",
+    "project_root": "/Users/vincenttourneret/Documents/apps/ju",
+    "output_folder": "/Users/vincenttourneret/Documents/apps/ju/docs",
+    "completed_steps": [
+        {
+            "step": "step_1",
+            "status": "completed",
+            "timestamp": "2026-01-23T18:38:02+01:00",
+            "summary": "Classified as monolith (Next.js)"
+        },
+        {
+            "step": "step_2",
+            "status": "completed",
+            "timestamp": "2026-01-23T18:39:00+01:00",
+            "summary": "Found 35 existing markdown docs"
+        },
+        {
+            "step": "step_3",
+            "status": "completed",
+            "timestamp": "2026-01-23T18:40:00+01:00",
+            "summary": "Analyzed tech stack (Next.js 16, Prisma 7)"
+        },
+        {
+            "step": "step_8",
+            "status": "completed",
+            "timestamp": "2026-01-23T18:41:00+01:00",
+            "summary": "Generated architecture.md"
+        },
+        {
+            "step": "step_9",
+            "status": "completed",
+            "timestamp": "2026-01-23T18:41:00+01:00",
+            "summary": "Generated project-overview.md, data-models.md"
+        },
+        {
+            "step": "step_10",
+            "status": "completed",
+            "timestamp": "2026-01-23T18:42:00+01:00",
+            "summary": "Generated index.md"
+        }
+    ],
+    "current_step": "complete",
+    "findings": {
+        "project_classification": "Monolith Web Application (Next.js)",
+        "project_types": [
+            {
+                "part_id": "root",
+                "project_type_id": "web",
+                "display_name": "Web Application"
+            }
+        ],
+        "existing_docs_count": 35
+    },
+    "outputs_generated": [
+        "project-scan-report.json",
+        "project-overview.md",
+        "data-models.md",
+        "architecture.md",
+        "index.md"
+    ],
+    "resume_instructions": "Workflow complete"
+}

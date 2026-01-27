@@ -5,3 +5,5 @@ export * from "./useFolders";
 export * from "./useSearch";
 export * from "./useInlineReferences";
 export * from "./useReferenceSearchWithDebounce";
+export * from "./useSectionTemplates";
+export * from "./useShortcuts";

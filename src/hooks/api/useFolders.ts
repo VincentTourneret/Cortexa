@@ -5,6 +5,7 @@ type Folder = {
   name: string;
   parentId: string | null;
   order: number;
+  color?: string | null;
   children?: Folder[];
 };
 
@@ -19,12 +20,14 @@ type FolderWithPath = {
 type CreateFolderInput = {
   name: string;
   parentId?: string | null;
+  color?: string | null;
 };
 
 type UpdateFolderInput = {
   id: string;
   name?: string;
   parentId?: string | null;
+  color?: string | null;
 };
 
 type ReorderFoldersInput = {

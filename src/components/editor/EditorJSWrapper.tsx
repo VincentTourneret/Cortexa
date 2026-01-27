@@ -26,10 +26,10 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
   const onChangeRef = useRef(onChange);
   const readOnlyRef = useRef(readOnly);
   const isInternalChangeRef = useRef(false); // Nouveau: suivre si le changement vient de l'éditeur
-  
+
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // État pour la modale de référence
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCardId, setModalCardId] = useState<string>("");
@@ -145,6 +145,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
               inlineToolbar: ["marker", "link", "fontSize", "inlineReference"],
               config: {
                 defaultStyle: "unordered",
+                maxLevel: 5,
               },
             },
             quote: {
@@ -311,7 +312,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
         if (isMounted) {
           editorInstanceRef.current = editor;
           setIsReady(true);
-          
+
           // En mode lecture seule, réattacher les événements des liens inline
           if (readOnlyRef.current) {
             setTimeout(() => {
@@ -365,7 +366,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
       try {
         // Vérifier l'état de lecture seule directement sur l'instance EditorJS
         const isCurrentlyReadOnly = editorInstanceRef.current.readOnly?.isEnabled ?? false;
-        
+
         // En mode lecture seule, on peut juste render directement
         if (isCurrentlyReadOnly) {
           await editorInstanceRef.current.render(newData);
@@ -380,16 +381,16 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
 
         // En mode édition, comparer les données avant de render
         const currentData = await editorInstanceRef.current.save();
-        
+
         const currentJson = JSON.stringify(currentData);
         const newJson = JSON.stringify(newData);
-        
+
         if (currentJson !== newJson) {
           // Sauvegarder l'état de focus
           const hadFocus = document.activeElement?.closest(`#${holderIdRef.current}`) !== null;
-          
+
           await editorInstanceRef.current.render(newData);
-          
+
           // Restaurer le focus si nécessaire
           if (hadFocus) {
             const firstBlock = document.querySelector(`#${holderIdRef.current} .ce-block`);
@@ -441,7 +442,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
         className="editorjs-wrapper rounded-lg border border-border bg-card p-4"
         style={{ minHeight: `${minHeight}px` }}
       />
-      
+
       {/* Modale pour afficher les références */}
       <ReferenceModal
         isOpen={modalOpen}

@@ -8,6 +8,7 @@ const updateKnowledgeCardSchema = z.object({
   title: z.string().trim().min(1).max(180).optional(),
   summary: z.string().trim().max(500).nullable().optional(),
   folderId: z.string().uuid().nullable().optional(),
+  color: z.string().optional().nullable(),
 });
 
 // GET /api/knowledge-cards/[id] - Récupérer une fiche et ses sections
@@ -113,11 +114,15 @@ export async function PATCH(
         ...(validatedData.folderId !== undefined && {
           folderId: validatedData.folderId ?? null,
         }),
+        ...(validatedData.color !== undefined && {
+          color: validatedData.color ?? null,
+        }),
       },
       select: {
         id: true,
         title: true,
         summary: true,
+        color: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -134,6 +139,45 @@ export async function PATCH(
 
     console.error(
       "Erreur lors de la mise à jour de la fiche de connaissances:",
+      error
+    );
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
+// DELETE /api/knowledge-cards/[id] - Supprimer une fiche
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const existingCard = await prisma.knowledgeCard.findFirst({
+      where: {
+        id,
+        userId: session.user.id,
+      },
+    });
+
+    if (!existingCard) {
+      return NextResponse.json({ error: "Fiche non trouvée" }, { status: 404 });
+    }
+
+    await prisma.knowledgeCard.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(
+      "Erreur lors de la suppression de la fiche de connaissances:",
       error
     );
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

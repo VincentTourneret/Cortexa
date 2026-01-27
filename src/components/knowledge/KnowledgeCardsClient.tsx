@@ -8,6 +8,8 @@ import {
   useKnowledgeCards,
   useCreateKnowledgeCard,
 } from "@/hooks/api/useKnowledgeCards";
+import { ColorPicker } from "@/components/ui/color-picker";
+import { getColorBackgroundClasses, getColorBackgroundStyle, isDarkColor } from "@/lib/color-utils";
 
 type KnowledgeCardsClientProps = {
   initialCards?: any[];
@@ -19,6 +21,7 @@ const KnowledgeCardsClientComponent: React.FC<KnowledgeCardsClientProps> = () =>
 
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
+  const [color, setColor] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void> =
@@ -36,10 +39,12 @@ const KnowledgeCardsClientComponent: React.FC<KnowledgeCardsClientProps> = () =>
         await createMutation.mutateAsync({
           title: trimmedTitle,
           summary: summary.trim() || undefined,
+          color,
         });
 
         setTitle("");
         setSummary("");
+        setColor(null);
       } catch (error) {
         console.error("Erreur lors de la création de la fiche:", error);
         setErrorMessage(
@@ -86,6 +91,17 @@ const KnowledgeCardsClientComponent: React.FC<KnowledgeCardsClientProps> = () =>
               className="min-h-[96px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
+              Couleur de la fiche
+            </label>
+            <div className="flex items-center gap-2">
+              <ColorPicker value={color} onChange={setColor} />
+              <span className="text-sm text-muted-foreground">
+                {color ? "Couleur personnalisée" : "Couleur par défaut"}
+              </span>
+            </div>
+          </div>
           {errorMessage ? (
             <p className="text-sm text-destructive">{errorMessage}</p>
           ) : null}
@@ -115,38 +131,48 @@ const KnowledgeCardsClientComponent: React.FC<KnowledgeCardsClientProps> = () =>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((card) => (
-              <Link
-                key={card.id}
-                href={`/knowledge/${card.id}`}
-                className="group rounded-lg border border-border bg-card p-4 shadow-sm transition hover:border-primary/60 hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-base font-semibold text-card-foreground group-hover:text-primary">
-                      {card.title}
-                    </h3>
-                    {card.summary ? (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {card.summary}
-                      </p>
-                    ) : (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Aucun résumé disponible.
-                      </p>
-                    )}
+            {cards.map((card) => {
+              const bgClasses = getColorBackgroundClasses(card.color);
+              const bgStyle = getColorBackgroundStyle(card.color);
+              const isDark = isDarkColor(card.color);
+              const textColorClass = isDark ? "text-white" : "text-foreground";
+              const mutedTextColorClass = isDark ? "text-white/70" : "text-muted-foreground";
+              const titleColorClass = isDark ? "text-white group-hover:text-white/90" : "text-card-foreground group-hover:text-primary";
+
+              return (
+                <Link
+                  key={card.id}
+                  href={`/knowledge/${card.id}`}
+                  className={`group rounded-lg border border-border p-4 shadow-sm transition hover:shadow-md ${bgClasses}`}
+                  style={bgStyle}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className={`text-base font-semibold ${titleColorClass}`}>
+                        {card.title}
+                      </h3>
+                      {card.summary ? (
+                        <p className={`mt-2 text-sm ${mutedTextColorClass}`}>
+                          {card.summary}
+                        </p>
+                      ) : (
+                        <p className={`mt-2 text-sm ${mutedTextColorClass}`}>
+                          Aucun résumé disponible.
+                        </p>
+                      )}
+                    </div>
+                    <div className={`rounded-full border border-border px-2 py-1 text-xs ${mutedTextColorClass}`}>
+                      {card.sectionsCount} section
+                      {card.sectionsCount > 1 ? "s" : ""}
+                    </div>
                   </div>
-                  <div className="rounded-full border border-border px-2 py-1 text-xs text-muted-foreground">
-                    {card.sectionsCount} section
-                    {card.sectionsCount > 1 ? "s" : ""}
-                  </div>
-                </div>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  Mise à jour le{" "}
-                  {new Date(card.updatedAt).toLocaleDateString("fr-FR")}
-                </p>
-              </Link>
-            ))}
+                  <p className={`mt-4 text-xs ${mutedTextColorClass}`}>
+                    Mise à jour le{" "}
+                    {new Date(card.updatedAt).toLocaleDateString("fr-FR")}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

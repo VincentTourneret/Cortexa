@@ -7,6 +7,7 @@ type KnowledgeCardSummary = {
   createdAt: string;
   updatedAt: string;
   sectionsCount: number;
+  color?: string | null;
 };
 
 type KnowledgeCard = {
@@ -20,6 +21,9 @@ type KnowledgeCard = {
 type CreateKnowledgeCardInput = {
   title: string;
   summary?: string;
+  templateId?: string;
+  folderId?: string | null;
+  color?: string | null;
 };
 
 type UpdateKnowledgeCardInput = {
@@ -27,6 +31,7 @@ type UpdateKnowledgeCardInput = {
   folderId?: string | null;
   title?: string;
   summary?: string;
+  color?: string | null;
 };
 
 // Clés de query
@@ -61,6 +66,7 @@ export const useKnowledgeCards = (folderId?: string | null) => {
         createdAt: card.createdAt,
         updatedAt: card.updatedAt,
         sectionsCount: card._count?.sections ?? 0,
+        color: card.color ?? null,
       }));
     },
   });
@@ -166,3 +172,40 @@ export const useDeleteKnowledgeCard = () => {
     },
   });
 };
+
+type ReorderKnowledgeCardsInput = {
+  cardIds: string[];
+  folderId: string | null;
+};
+
+// Hook pour réordonner les fiches
+export const useReorderKnowledgeCards = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: ReorderKnowledgeCardsInput) => {
+      const response = await fetch("/api/knowledge-cards/reorder", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors du réordonnancement");
+      }
+
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalider la liste des fiches pour le dossier concerné
+      queryClient.invalidateQueries({
+        queryKey: knowledgeCardsKeys.list(variables.folderId),
+      });
+    },
+  });
+};
+

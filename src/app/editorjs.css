@@ -66,6 +66,12 @@
   color: hsl(var(--muted-foreground));
 }
 
+/* Listes imbriquées */
+.cdx-list__item .cdx-list {
+  margin-left: 20px;
+  list-style-type: inherit;
+}
+
 /* Citations */
 .cdx-quote {
   margin: 0;
@@ -220,7 +226,6 @@
 
 .image-tool__image img {
   max-width: 100%;
-  vertical-align: bottom;
   display: block;
 }
 

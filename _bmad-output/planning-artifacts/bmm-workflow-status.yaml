@@ -1,0 +1,68 @@
+generated: "2026-01-23T18:32:00+01:00"
+project: "ju"
+project_type: "brownfield"
+selected_track: "method"
+field_type: "brownfield"
+workflow_path: "_bmad/bmm/workflows/workflow-status/paths/method-brownfield.yaml"
+workflow_status:
+  - id: document-project
+    phase: 0
+    name: Documentation
+    status: required
+    agent: analyst
+    command: /bmad:bmm:workflows:document-project
+  - id: brainstorm-project
+    phase: 1
+    name: Analysis
+    status: skipped
+  - id: research
+    phase: 1
+    name: Analysis
+    status: skipped
+  - id: product-brief
+    phase: 1
+    name: Analysis
+    status: skipped
+  - id: prd
+    phase: 2
+    name: Planning
+    status: required
+    agent: pm
+    command: /bmad:bmm:workflows:create-prd
+  - id: create-ux-design
+    phase: 2
+    name: Planning
+    status: conditional
+    condition: if_has_ui
+    agent: ux-designer
+    command: /bmad:bmm:workflows:create-ux-design
+  - id: create-architecture
+    phase: 3
+    name: Solutioning
+    status: required
+    agent: architect
+    command: /bmad:bmm:workflows:create-architecture
+  - id: create-epics-and-stories
+    phase: 3
+    name: Solutioning
+    status: required
+    agent: pm
+    command: /bmad:bmm:workflows:create-epics-and-stories
+  - id: test-design
+    phase: 3
+    name: Solutioning
+    status: optional
+    agent: tea
+    command: /bmad:bmm:workflows:test-design
+  - id: implementation-readiness
+    phase: 3
+    name: Solutioning
+    status: required
+    agent: architect
+    command: /bmad:bmm:workflows:implementation-readiness
+  - id: sprint-planning
+    phase: 4
+    name: Implementation
+    status: required
+    agent: sm
+    command: /bmad:bmm:workflows:sprint-planning

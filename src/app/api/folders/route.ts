@@ -7,6 +7,7 @@ import { z } from "zod";
 const createFolderSchema = z.object({
   name: z.string().min(1, "Le nom du dossier est requis").max(255),
   parentId: z.string().uuid().optional().nullable(),
+  color: z.string().optional().nullable(),
 });
 
 // GET /api/folders - Récupérer les dossiers d'un utilisateur
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         parentId: validatedData.parentId || null,
         order: newOrder,
+        color: validatedData.color || null,
       },
       include: {
         parent: {

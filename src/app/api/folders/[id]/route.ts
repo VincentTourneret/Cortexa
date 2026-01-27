@@ -8,6 +8,7 @@ const updateFolderSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   parentId: z.string().uuid().nullable().optional(),
   order: z.number().int().optional(),
+  color: z.string().optional().nullable(),
 });
 
 // GET /api/folders/[id] - Récupérer un dossier et son chemin complet (pour le breadcrumb)
@@ -169,13 +170,16 @@ export async function PATCH(
       newOrder = validatedData.order;
     }
 
-    // Mettre à jour le parentId, l'order et/ou le nom
+    // Mettre à jour le parentId, l'order, le nom et/ou la couleur
     const updatedFolder = await prisma.folder.update({
       where: { id },
       data: {
         ...(validatedData.name !== undefined && { name: validatedData.name }),
         ...(validatedData.parentId !== undefined && {
           parentId: validatedData.parentId ?? null,
+        }),
+        ...(validatedData.color !== undefined && {
+          color: validatedData.color ?? null,
         }),
         order: newOrder,
       },

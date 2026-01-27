@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { useCreateFolder } from "@/hooks/api/useFolders";
 
 interface CreateFolderDialogProps {
@@ -26,6 +27,7 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   const createMutation = useCreateFolder();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [color, setColor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,9 +43,11 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
       await createMutation.mutateAsync({
         name: name.trim(),
         parentId: parentId,
+        color: color,
       });
 
       setName("");
+      setColor(null);
       setOpen(false);
       setError(null);
       onFolderCreated();
@@ -97,6 +101,17 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
                   <p className="text-sm text-destructive">{error}</p>
                 )}
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Couleur du dossier
+                </label>
+                <div className="flex items-center gap-2">
+                  <ColorPicker value={color} onChange={setColor} />
+                  <span className="text-sm text-muted-foreground">
+                    {color ? "Couleur personnalisée" : "Couleur par défaut"}
+                  </span>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -105,6 +120,7 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
                 onClick={() => {
                   setOpen(false);
                   setName("");
+                  setColor(null);
                   setError(null);
                 }}
                 disabled={createMutation.isPending}

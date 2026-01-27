@@ -24,6 +24,10 @@ export default class InlineReferenceTool {
     this.api = api;
     this.config = config || {};
     
+    // Utiliser la délégation d'événements au niveau du document pour garantir que les clics fonctionnent
+    // même si les éléments sont recréés (mode readOnly)
+    this.setupEventDelegation();
+    
     // Réattacher les événements de clic aux liens existants après un court délai
     setTimeout(() => {
       this.reattachClickEvents();
@@ -45,6 +49,36 @@ export default class InlineReferenceTool {
     (window as any).reattachInlineReferenceEvents = () => {
       this.reattachClickEvents();
     };
+  }
+  
+  /**
+   * Configure la délégation d'événements au niveau du document
+   * Cela garantit que les clics fonctionnent même si les éléments sont recréés
+   */
+  setupEventDelegation() {
+    // Utiliser capture phase pour intercepter avant EditorJS
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest(`.${this.class}`) as HTMLElement;
+      
+      if (link) {
+        const cardId = link.getAttribute("data-card-id");
+        const sectionId = link.getAttribute("data-section-id");
+        
+        if (cardId) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          let url = `/knowledge/${cardId}`;
+          if (sectionId) {
+            url += `#section-${sectionId}`;
+          }
+          
+          console.log("Navigation vers:", url);
+          window.location.href = url;
+        }
+      }
+    }, true); // Utiliser capture phase
   }
   
   /**
@@ -131,7 +165,7 @@ export default class InlineReferenceTool {
         const mark = link as HTMLElement;
         const cardId = mark.getAttribute("data-card-id");
         
-        if (!cardId || mark.hasAttribute("data-has-click-event")) return;
+        if (!cardId) return;
         
         // Récupérer les titres depuis l'API
         const cardInfo = referencesMap.get(cardId) as any;
@@ -147,28 +181,19 @@ export default class InlineReferenceTool {
           }
         }
         
-        mark.setAttribute("data-has-click-event", "true");
-        
-        mark.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          const targetCardId = mark.getAttribute("data-card-id");
-          const targetSectionId = mark.getAttribute("data-section-id");
-
-          if (targetCardId) {
-            let url = `/knowledge/${targetCardId}`;
-            if (targetSectionId) {
-              url += `#section-${targetSectionId}`;
-            }
-            
-            console.log("Navigation vers:", url);
-            window.location.href = url;
-          }
-        });
-        
-        // Attacher les événements de tooltip
-        this.attachTooltipEvents(mark);
+        // Ne pas réattacher les événements de clic car on utilise la délégation d'événements
+        // Mais s'assurer que l'attribut est présent pour le tooltip
+        if (!mark.hasAttribute("data-has-click-event")) {
+          // Attacher les événements de tooltip seulement
+          this.attachTooltipEvents(mark);
+          mark.setAttribute("data-has-click-event", "true");
+        } else {
+          // Réattacher les événements de tooltip si nécessaire
+          // (ils peuvent être perdus lors du re-render)
+          // Supprimer l'attribut pour permettre la réattachement
+          mark.removeAttribute("data-has-tooltip-events");
+          this.attachTooltipEvents(mark);
+        }
       });
     } catch (error) {
       console.error("Erreur lors de la récupération des titres des références:", error);
@@ -614,29 +639,10 @@ export default class InlineReferenceTool {
       mark.setAttribute("data-section-title", sectionTitle);
     }
 
-    // Marquer que ce lien a déjà un événement
+    // Ne pas attacher d'événement de clic directement car on utilise la délégation d'événements
+    // Mais marquer que ce lien est configuré
     if (!mark.hasAttribute("data-has-click-event")) {
       mark.setAttribute("data-has-click-event", "true");
-      
-      // Ajouter un événement de clic pour naviguer
-      mark.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const targetCardId = mark.getAttribute("data-card-id");
-        const targetSectionId = mark.getAttribute("data-section-id");
-
-        if (targetCardId) {
-          let url = `/knowledge/${targetCardId}`;
-          if (targetSectionId) {
-            url += `#section-${targetSectionId}`;
-          }
-          
-          // Navigation
-          console.log("Navigation vers:", url);
-          window.location.href = url;
-        }
-      });
       
       // Ajouter les événements de tooltip
       this.attachTooltipEvents(mark);
@@ -650,6 +656,13 @@ export default class InlineReferenceTool {
    * Attache les événements de tooltip
    */
   attachTooltipEvents(mark: HTMLElement) {
+    // Éviter d'attacher plusieurs fois les mêmes événements
+    if (mark.hasAttribute("data-has-tooltip-events")) {
+      return;
+    }
+    
+    mark.setAttribute("data-has-tooltip-events", "true");
+    
     let tooltip: HTMLElement | null = null;
 
     mark.addEventListener("mouseenter", (e) => {
