@@ -77,10 +77,12 @@ src/
 ## 📖 Documentation Détaillée
 
 Pour approfondir certains aspects techniques :
-- [Éditeur & Correction de bugs](EDITORJS_README.md)
-- [Système de Liens Inline](INLINE_REFERENCES_README.md)
-- [Guide d'Authentification](AUTH_README.md)
-- [Configuration Prisma](PRISMA_SETUP.md)
+- [Éditeur & Correction de bugs](docs/editorjs.md)
+- [Système de Liens Inline](docs/inline-references.md)
+- [Guide d'Authentification](docs/auth.md)
+- [Configuration Prisma](docs/prisma.md)
+- [Data-fetching & React Query](docs/react-query.md)
+- [Theming & UI Setup](docs/theme.md)
 
 ## 📄 Licence
 

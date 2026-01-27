@@ -29,14 +29,14 @@ These documents provide a high-level overview of the system state.
 Detailed documentation for specific subsystems found in the project root.
 
 ### Core Features
-- [**Inline References**](../INLINE_REFERENCES_README.md) - Complete guide to the referencing system.
-- [**EditorJS Integration**](../EDITORJS_README.md) - Rich text editor implementation.
-- [**Authentication**](../AUTH_README.md) - Auth flows and setup.
+- [**Inline References**](./inline-references.md) - Complete guide to the referencing system.
+- [**EditorJS Integration**](./editorjs.md) - Rich text editor implementation.
+- [**Authentication**](./auth.md) - Auth flows and setup.
 
 ### Technical Implementation
-- [**React Query**](../REACT_QUERY_IMPLEMENTATION.md) - Data fetching strategy.
-- [**Prisma Setup**](../PRISMA_SETUP.md) - Database configuration.
-- [**Theme Setup**](../THEME_SETUP.md) - UI theming guide.
+- [**React Query**](./react-query.md) - Data fetching strategy.
+- [**Prisma Setup**](./prisma.md) - Database configuration.
+- [**Theme Setup**](./theme.md) - UI theming guide.
 
 ## Getting Started
 
