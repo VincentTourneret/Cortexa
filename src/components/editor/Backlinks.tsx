@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, ExternalLink } from "lucide-react";
+import api from "@/lib/axios";
 
 type BacklinkType = {
   id: string;
@@ -52,36 +53,24 @@ export function Backlinks({ cardId, sectionId, className = "" }: BacklinksProps)
         setError(null);
 
         // Récupérer les liens entrants (backlinks)
-        const backlinkRes = await fetch(
-          `/api/inline-references?cardId=${cardId}&direction=to${
-            sectionId ? `&sectionId=${sectionId}` : ""
+        const backlinkRes = await api.get(
+          `/api/inline-references?cardId=${cardId}&direction=to${sectionId ? `&sectionId=${sectionId}` : ""
           }`
         );
 
-        if (!backlinkRes.ok) {
-          throw new Error("Erreur lors du chargement des backlinks");
-        }
-
-        const backlinkData = await backlinkRes.json();
-        setBacklinks(backlinkData.references || []);
+        setBacklinks(backlinkRes.data.references || []);
 
         // Récupérer les liens sortants
-        const outgoingRes = await fetch(
-          `/api/inline-references?cardId=${cardId}&direction=from${
-            sectionId ? `&sectionId=${sectionId}` : ""
+        const outgoingRes = await api.get(
+          `/api/inline-references?cardId=${cardId}&direction=from${sectionId ? `&sectionId=${sectionId}` : ""
           }`
         );
 
-        if (!outgoingRes.ok) {
-          throw new Error("Erreur lors du chargement des liens sortants");
-        }
-
-        const outgoingData = await outgoingRes.json();
-        setOutgoingLinks(outgoingData.references || []);
-      } catch (err) {
+        setOutgoingLinks(outgoingRes.data.references || []);
+      } catch (err: any) {
         console.error("Erreur lors du chargement des liens:", err);
         setError(
-          err instanceof Error ? err.message : "Erreur lors du chargement des liens"
+          err.response?.data?.error || err.message || "Erreur lors du chargement des liens"
         );
       } finally {
         setLoading(false);
@@ -155,11 +144,10 @@ export function Backlinks({ cardId, sectionId, className = "" }: BacklinksProps)
               {backlinks.map((link) => (
                 <Link
                   key={link.id}
-                  href={`/knowledge/${link.sourceCardId}${
-                    link.sourceSectionId
+                  href={`/knowledge/${link.sourceCardId}${link.sourceSectionId
                       ? `#section-${link.sourceSectionId}`
                       : ""
-                  }`}
+                    }`}
                   className="block rounded-lg border border-border bg-card p-3 transition-colors hover:bg-accent"
                 >
                   <div className="mb-1 flex items-start justify-between gap-2">
@@ -205,11 +193,10 @@ export function Backlinks({ cardId, sectionId, className = "" }: BacklinksProps)
               {outgoingLinks.map((link) => (
                 <Link
                   key={link.id}
-                  href={`/knowledge/${link.targetCardId}${
-                    link.targetSectionId
+                  href={`/knowledge/${link.targetCardId}${link.targetSectionId
                       ? `#section-${link.targetSectionId}`
                       : ""
-                  }`}
+                    }`}
                   className="block rounded-lg border border-border bg-card p-3 transition-colors hover:bg-accent"
                 >
                   <div className="mb-1 flex items-start justify-between gap-2">

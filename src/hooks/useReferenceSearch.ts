@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { SearchResult } from "@/types/reference";
+import api from "@/lib/axios";
 
 interface UseReferenceSearchResult {
   results: SearchResult[];
@@ -47,33 +48,29 @@ export function useReferenceSearch(
     setError(null);
 
     try {
-      const response = await fetch(
+      const { data } = await api.get(
         `/api/search?q=${encodeURIComponent(query)}`,
         {
           signal: abortControllerRef.current.signal,
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Erreur lors de la recherche");
-      }
-
-      const data = await response.json();
       setResults(data.results || []);
-    } catch (err) {
+    } catch (err: any) {
       // Ignorer les erreurs d'annulation
-      if (err instanceof Error && err.name === "AbortError") {
+      if (err && (err.name === "AbortError" || err.code === "ERR_CANCELED")) {
         return;
       }
 
       console.error("Erreur de recherche:", err);
       setError(
-        err instanceof Error ? err.message : "Erreur lors de la recherche"
+        err.response?.data?.error || err.message || "Erreur lors de la recherche"
       );
       setResults([]);
     } finally {
-      setLoading(false);
+      if (!abortControllerRef.current?.signal.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 

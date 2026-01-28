@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 type KnowledgeSection = {
   id: string;
@@ -45,12 +46,7 @@ export const useSections = (cardId: string) => {
   return useQuery({
     queryKey: sectionsKeys.list(cardId),
     queryFn: async (): Promise<KnowledgeSection[]> => {
-      const response = await fetch(`/api/knowledge-cards/${cardId}/sections`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des sections");
-      }
+      const { data } = await api.get(`/api/knowledge-cards/${cardId}/sections`);
 
       return data.sections || [];
     },
@@ -64,19 +60,7 @@ export const useCreateSection = () => {
 
   return useMutation({
     mutationFn: async ({ cardId, ...input }: CreateSectionInput) => {
-      const response = await fetch(`/api/knowledge-cards/${cardId}/sections`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la création");
-      }
+      const { data } = await api.post(`/api/knowledge-cards/${cardId}/sections`, input);
 
       return { cardId, section: data.section };
     },
@@ -97,22 +81,10 @@ export const useUpdateSection = () => {
       sectionId,
       ...input
     }: UpdateSectionInput) => {
-      const response = await fetch(
+      const { data } = await api.put(
         `/api/knowledge-cards/${cardId}/sections/${sectionId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(input),
-        }
+        input
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la mise à jour");
-      }
 
       return { cardId, section: data.section };
     },
@@ -132,18 +104,9 @@ export const useDeleteSection = () => {
 
   return useMutation({
     mutationFn: async ({ cardId, sectionId }: DeleteSectionInput) => {
-      const response = await fetch(
-        `/api/knowledge-cards/${cardId}/sections/${sectionId}`,
-        {
-          method: "DELETE",
-        }
+      await api.delete(
+        `/api/knowledge-cards/${cardId}/sections/${sectionId}`
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
 
       return { cardId, sectionId };
     },

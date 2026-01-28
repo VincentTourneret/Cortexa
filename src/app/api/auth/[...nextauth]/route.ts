@@ -43,6 +43,15 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Vérification de l'email
+        console.log("Checking verification for user:", user.email, "emailVerified:", user.emailVerified);
+
+        // Temporaire : Si emailVerified est null, on loggue pour débugger
+        if (!user.emailVerified) {
+          console.log("User not verified, blocking login");
+          throw new Error("Veuillez vérifier votre email avant de vous connecter");
+        }
+
         // Retour des informations utilisateur pour la session
         return {
           id: user.id,
@@ -68,7 +77,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.theme = user.theme || "light";
       }
-      
+
       // Lors d'une mise à jour de session (ex: changement de thème)
       if (trigger === "update" && session?.user) {
         // Récupérer les données à jour depuis la base de données
@@ -81,7 +90,7 @@ export const authOptions: NextAuthOptions = {
           token.theme = session.user.theme;
         }
       }
-      
+
       return token;
     },
     async session({ session, token }) {

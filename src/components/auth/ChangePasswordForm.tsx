@@ -2,6 +2,8 @@
 
 import { useState, FormEvent } from "react";
 import { changePasswordSchema } from "@/lib/validations";
+import api from "@/lib/axios";
+import { Button } from "@/components/ui/button";
 
 export const ChangePasswordForm = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -31,31 +33,19 @@ export const ChangePasswordForm = () => {
     }
 
     try {
-      const response = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          confirmPassword,
-        }),
+      await api.post("/api/auth/change-password", {
+        currentPassword,
+        newPassword,
+        confirmPassword,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Une erreur est survenue");
-        setIsLoading(false);
-        return;
-      }
 
       setSuccess("Mot de passe modifié avec succès");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setIsLoading(false);
-    } catch (err) {
-      setError("Une erreur est survenue lors du changement de mot de passe");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Une erreur est survenue lors du changement de mot de passe");
       setIsLoading(false);
     }
   };
@@ -122,13 +112,13 @@ export const ChangePasswordForm = () => {
         />
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={isLoading}
-        className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 w-full"
       >
         {isLoading ? "Modification..." : "Modifier le mot de passe"}
-      </button>
+      </Button>
     </form>
   );
 };

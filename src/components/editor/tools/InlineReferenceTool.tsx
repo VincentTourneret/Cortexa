@@ -3,9 +3,11 @@
  * Permet de surligner du texte et de le lier à une fiche de connaissance
  */
 
+import api from "@/lib/axios";
+
 export default class InlineReferenceTool {
   static CSS = "inline-reference";
-  
+
   private api: any;
   private button: HTMLButtonElement | null = null;
   private tag: string = "SPAN";
@@ -23,34 +25,34 @@ export default class InlineReferenceTool {
   constructor({ api, config }: { api: any; config?: any }) {
     this.api = api;
     this.config = config || {};
-    
+
     // Utiliser la délégation d'événements au niveau du document pour garantir que les clics fonctionnent
     // même si les éléments sont recréés (mode readOnly)
     this.setupEventDelegation();
-    
+
     // Réattacher les événements de clic aux liens existants après un court délai
     setTimeout(() => {
       this.reattachClickEvents();
     }, 500);
-    
+
     // En mode visualisation, vérifier à nouveau après 1 et 2 secondes
     setTimeout(() => {
       this.reattachClickEvents();
     }, 1000);
-    
+
     setTimeout(() => {
       this.reattachClickEvents();
     }, 2000);
-    
+
     // Observer les changements du DOM pour attacher les événements automatiquement
     this.setupMutationObserver();
-    
+
     // Exposer une fonction globale pour réattacher manuellement si nécessaire
     (window as any).reattachInlineReferenceEvents = () => {
       this.reattachClickEvents();
     };
   }
-  
+
   /**
    * Configure la délégation d'événements au niveau du document
    * Cela garantit que les clics fonctionnent même si les éléments sont recréés
@@ -60,46 +62,46 @@ export default class InlineReferenceTool {
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
       const link = target.closest(`.${this.class}`) as HTMLElement;
-      
+
       if (link) {
         const cardId = link.getAttribute("data-card-id");
         const sectionId = link.getAttribute("data-section-id");
-        
+
         if (cardId) {
           e.preventDefault();
           e.stopPropagation();
-          
+
           let url = `/knowledge/${cardId}`;
           if (sectionId) {
             url += `#section-${sectionId}`;
           }
-          
+
           console.log("Navigation vers:", url);
           window.location.href = url;
         }
       }
     }, true); // Utiliser capture phase
   }
-  
+
   /**
    * Configure un MutationObserver pour détecter les nouveaux liens
    */
   setupMutationObserver() {
     const observer = new MutationObserver((mutations) => {
       let shouldReattach = false;
-      
+
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           // Si un nœud ajouté contient ou est un lien inline
           if (node instanceof HTMLElement) {
-            if (node.classList?.contains(this.class) || 
-                node.querySelector?.(`.${this.class}`)) {
+            if (node.classList?.contains(this.class) ||
+              node.querySelector?.(`.${this.class}`)) {
               shouldReattach = true;
             }
           }
         });
       });
-      
+
       if (shouldReattach) {
         // Petit délai pour laisser le DOM se stabiliser
         setTimeout(() => {
@@ -107,7 +109,7 @@ export default class InlineReferenceTool {
         }, 100);
       }
     });
-    
+
     // Observer tout le document
     observer.observe(document.body, {
       childList: true,
@@ -120,59 +122,48 @@ export default class InlineReferenceTool {
    */
   async reattachClickEvents() {
     const existingLinks = document.querySelectorAll(`.${this.class}`);
-    
+
     if (existingLinks.length === 0) return;
-    
+
     // Collecter tous les IDs uniques de références
     const cardIds = new Set<string>();
     const sectionIds = new Set<string>();
-    
+
     existingLinks.forEach((link) => {
       const mark = link as HTMLElement;
       const cardId = mark.getAttribute("data-card-id");
       const sectionId = mark.getAttribute("data-section-id");
-      
+
       if (cardId) cardIds.add(cardId);
       if (sectionId) sectionIds.add(sectionId);
     });
-    
+
     // Récupérer les informations de toutes les références en une seule requête
     const allIds = [...Array.from(cardIds), ...Array.from(sectionIds)];
     if (allIds.length === 0) return;
-    
+
     try {
-      const response = await fetch("/api/inline-references", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: allIds }),
-      });
-      
-      if (!response.ok) {
-        console.warn("Impossible de récupérer les informations des références");
-        return;
-      }
-      
-      const data = await response.json();
+      const { data } = await api.post("/api/inline-references", { ids: allIds });
       const references = data.references || [];
-      
+
       // Créer un map pour accès rapide
       const referencesMap = new Map(
         references.map((ref: any) => [ref.id, ref])
       );
-      
+
       // Attacher les événements à chaque lien
       existingLinks.forEach((link) => {
         const mark = link as HTMLElement;
         const cardId = mark.getAttribute("data-card-id");
-        
+
         if (!cardId) return;
-        
+
         // Récupérer les titres depuis l'API
         const cardInfo = referencesMap.get(cardId) as any;
         if (cardInfo?.title) {
           mark.setAttribute("data-card-title", cardInfo.title);
         }
-        
+
         const sectionId = mark.getAttribute("data-section-id");
         if (sectionId) {
           const sectionInfo = referencesMap.get(sectionId) as any;
@@ -180,7 +171,7 @@ export default class InlineReferenceTool {
             mark.setAttribute("data-section-title", sectionInfo.title);
           }
         }
-        
+
         // Ne pas réattacher les événements de clic car on utilise la délégation d'événements
         // Mais s'assurer que l'attribut est présent pour le tooltip
         if (!mark.hasAttribute("data-has-click-event")) {
@@ -277,7 +268,7 @@ export default class InlineReferenceTool {
 
     const sel = window.getSelection();
     if (!sel) return;
-    
+
     const range = sel.getRangeAt(0);
     const unwrappedContent = range.extractContents();
 
@@ -375,14 +366,7 @@ export default class InlineReferenceTool {
     const footer = document.createElement("div");
     footer.style.cssText = "display: flex; justify-content: flex-end; gap: 8px;";
     footer.innerHTML = `
-      <button class="cancel-btn" style="
-        padding: 8px 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        background: white;
-        cursor: pointer;
-        font-size: 14px;
-      ">Annuler</button>
+      <button class="cancel-btn inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3" type="button">Annuler</button>
     `;
 
     modal.appendChild(header);
@@ -445,17 +429,11 @@ export default class InlineReferenceTool {
   ) {
     try {
       // Construire l'URL - query peut être vide pour charger toutes les fiches
-      const url = query 
+      const url = query
         ? `/api/search?q=${encodeURIComponent(query)}`
         : `/api/search`;
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error("Erreur lors de la recherche");
-      }
-      
-      const data = await response.json();
+
+      const { data } = await api.get(url);
 
       // Vider le container
       container.innerHTML = "";
@@ -539,19 +517,17 @@ export default class InlineReferenceTool {
 
     item.innerHTML = `
       <div style="font-weight: 600; margin-bottom: 4px;">${card.title}</div>
-      ${
-        card.summary
-          ? `<div style="font-size: 13px; color: #6b7280;">${card.summary}</div>`
-          : ""
+      ${card.summary
+        ? `<div style="font-size: 13px; color: #6b7280;">${card.summary}</div>`
+        : ""
       }
-      ${
-        card.sections && card.sections.length > 0
-          ? `
+      ${card.sections && card.sections.length > 0
+        ? `
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #f3f4f6;">
           <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">Sections:</div>
           ${card.sections
-            .map(
-              (section: any) => `
+          .map(
+            (section: any) => `
             <div 
               class="section-item" 
               data-section-id="${section.id}"
@@ -568,11 +544,11 @@ export default class InlineReferenceTool {
               ${section.title}
             </div>
           `
-            )
-            .join("")}
+          )
+          .join("")}
         </div>
       `
-          : ""
+        : ""
       }
     `;
 
@@ -620,17 +596,17 @@ export default class InlineReferenceTool {
    * Sélectionne une référence (fiche ou section)
    */
   selectReference(
-    mark: HTMLElement, 
-    cardId: string, 
-    sectionId?: string, 
-    cardTitle?: string, 
+    mark: HTMLElement,
+    cardId: string,
+    sectionId?: string,
+    cardTitle?: string,
     sectionTitle?: string
   ) {
     mark.setAttribute("data-card-id", cardId);
     if (sectionId) {
       mark.setAttribute("data-section-id", sectionId);
     }
-    
+
     // Stocker les titres pour le tooltip
     if (cardTitle) {
       mark.setAttribute("data-card-title", cardTitle);
@@ -643,7 +619,7 @@ export default class InlineReferenceTool {
     // Mais marquer que ce lien est configuré
     if (!mark.hasAttribute("data-has-click-event")) {
       mark.setAttribute("data-has-click-event", "true");
-      
+
       // Ajouter les événements de tooltip
       this.attachTooltipEvents(mark);
     }
@@ -660,15 +636,15 @@ export default class InlineReferenceTool {
     if (mark.hasAttribute("data-has-tooltip-events")) {
       return;
     }
-    
+
     mark.setAttribute("data-has-tooltip-events", "true");
-    
+
     let tooltip: HTMLElement | null = null;
 
     mark.addEventListener("mouseenter", (e) => {
       const cardTitle = mark.getAttribute("data-card-title");
       const sectionTitle = mark.getAttribute("data-section-title");
-      
+
       if (!cardTitle) return;
 
       // Créer le tooltip
@@ -715,7 +691,7 @@ export default class InlineReferenceTool {
       // Positionner le tooltip
       const rect = mark.getBoundingClientRect();
       const tooltipRect = tooltip.getBoundingClientRect();
-      
+
       // Position par défaut : en dessous du lien, centré
       let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
       let top = rect.bottom + 8;
@@ -762,7 +738,7 @@ export default class InlineReferenceTool {
         backdrop.remove();
       }
     });
-    
+
     // Supprimer le modal
     modal.remove();
   }
@@ -774,7 +750,7 @@ export default class InlineReferenceTool {
     try {
       // Récupérer le contexte actuel (sourceCardId et sourceSectionId)
       const context = this.getEditorContext();
-      
+
       if (!context.sourceCardId) {
         console.warn("Contexte source non disponible");
         return;
@@ -793,63 +769,44 @@ export default class InlineReferenceTool {
       });
 
       // Enregistrer le lien via l'API
-      const response = await fetch("/api/inline-references", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sourceCardId: context.sourceCardId,
-          sourceSectionId: context.sourceSectionId,
-          targetCardId: cardId,
-          targetSectionId: sectionId,
-          highlightedText,
-        }),
+      await api.post("/api/inline-references/create", {
+        targetCardId: cardId,
+        targetSectionId: sectionId,
+        sourceCardId: context.sourceCardId,
+        sourceSectionId: context.sourceSectionId,
+        text: highlightedText,
       });
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de l'enregistrement du lien");
-      }
-
-      const data = await response.json();
-      console.log("Lien enregistré:", data);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement du lien:", error);
     }
   }
 
   /**
-   * Récupère le contexte de l'éditeur (fiche et section actuelles)
-   * Ces données doivent être fournies par le composant parent
+   * Récupère le contexte de l'éditeur (ID de la fiche et de la section en cours d'édition)
+   * Cette méthode tente de deviner le contexte à partir de l'URL
    */
-  getEditorContext(): {
-    sourceCardId?: string;
-    sourceSectionId?: string;
-  } {
-    // Récupérer depuis les attributs data de l'éditeur
-    const editorElement = document.querySelector(".editorjs-wrapper");
-    if (!editorElement) {
-      return {};
-    }
+  getEditorContext() {
+    // Essayer de récupérer l'ID depuis l'URL: /knowledge/[id]
+    const path = window.location.pathname;
+    const match = path.match(/\/knowledge\/([^\/]+)/);
+    const sourceCardId = match ? match[1] : null;
 
-    const sourceCardId = editorElement.getAttribute("data-card-id") || undefined;
-    const sourceSectionId = editorElement.getAttribute("data-section-id") || undefined;
-
-    return { sourceCardId, sourceSectionId };
+    // Pour la section, un peu plus compliqué car souvent dans le hash ou non présent
+    // On retourne null pour l'instant
+    return {
+      sourceCardId,
+      sourceSectionId: null, // À implémenter si besoin
+    };
   }
 
-  /**
-   * Sanitize pour sauvegarder
-   */
   static get sanitize() {
     return {
       span: {
-        class: InlineReferenceTool.CSS,
+        class: true,
         "data-card-id": true,
         "data-section-id": true,
-        "data-card-title": true,
-        "data-section-title": true,
-        "data-has-click-event": true,
+        style: true,
       },
     };
   }

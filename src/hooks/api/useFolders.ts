@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 type Folder = {
   id: string;
@@ -52,12 +53,7 @@ export const useFolders = (parentId?: string | null) => {
       const url = parentId
         ? `/api/folders?parentId=${parentId}`
         : "/api/folders";
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des dossiers");
-      }
+      const { data } = await api.get(url);
 
       return data.folders || [];
     },
@@ -69,12 +65,7 @@ export const useFolder = (id: string) => {
   return useQuery({
     queryKey: foldersKeys.detail(id),
     queryFn: async (): Promise<FolderWithPath> => {
-      const response = await fetch(`/api/folders/${id}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération du dossier");
-      }
+      const { data } = await api.get(`/api/folders/${id}`);
 
       return data;
     },
@@ -88,19 +79,7 @@ export const useCreateFolder = () => {
 
   return useMutation({
     mutationFn: async (input: CreateFolderInput) => {
-      const response = await fetch("/api/folders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la création");
-      }
+      const { data } = await api.post("/api/folders", input);
 
       return data.folder;
     },
@@ -117,19 +96,7 @@ export const useUpdateFolder = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...input }: UpdateFolderInput) => {
-      const response = await fetch(`/api/folders/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la mise à jour");
-      }
+      const { data } = await api.patch(`/api/folders/${id}`, input);
 
       return data.folder;
     },
@@ -147,15 +114,7 @@ export const useDeleteFolder = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/folders/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
+      await api.delete(`/api/folders/${id}`);
 
       return { id };
     },
@@ -172,19 +131,7 @@ export const useReorderFolders = () => {
 
   return useMutation({
     mutationFn: async (input: ReorderFoldersInput) => {
-      const response = await fetch("/api/folders/reorder", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors du réordonnancement");
-      }
+      const { data } = await api.put("/api/folders/reorder", input);
 
       return data;
     },

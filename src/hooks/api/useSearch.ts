@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { SearchResult } from "@/types/reference";
+import api from "@/lib/axios";
 
 // Clés de query
 export const searchKeys = {
@@ -16,12 +17,7 @@ export const useSearch = (query: string, enabled: boolean = true) => {
         return [];
       }
 
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la recherche");
-      }
+      const { data } = await api.get(`/api/search?q=${encodeURIComponent(query)}`);
 
       return data.results || [];
     },

@@ -108,7 +108,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
     try {
       // Nettoyer et valider les données avant l'envoi
       const sanitizedData = sanitizeEditorJSData(dialogEditorData || { blocks: [] });
-      
+
       const result = await createMutation.mutateAsync({
         cardId: card.id,
         title: trimmedTitle,
@@ -166,7 +166,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
     }
   };
 
-  const handleSectionEditorChange = useCallback((sectionId: string) => 
+  const handleSectionEditorChange = useCallback((sectionId: string) =>
     (data: EditorJSData) => {
       if (editingSections.has(sectionId)) {
         setSectionEditorDataMap(prev => {
@@ -186,7 +186,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
   const toggleEditMode = useCallback((sectionId: string) => {
     const isCurrentlyEditing = editingSections.has(sectionId);
     const hasChanges = hasUnsavedChanges.get(sectionId);
-    
+
     if (isCurrentlyEditing && hasChanges) {
       const confirmed = window.confirm(
         "Vous avez des modifications non sauvegardées. Voulez-vous continuer ?"
@@ -195,7 +195,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
         return;
       }
     }
-    
+
     setEditingSections(prev => {
       const newSet = new Set(prev);
       if (isCurrentlyEditing) {
@@ -205,7 +205,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
       }
       return newSet;
     });
-    
+
     if (isCurrentlyEditing) {
       setHasUnsavedChanges(prev => {
         const newMap = new Map(prev);
@@ -213,7 +213,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
         return newMap;
       });
     }
-    
+
     setErrorMessage(null);
   }, [editingSections, hasUnsavedChanges]);
 
@@ -240,7 +240,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
     setSectionEditorDataMap(prev => {
       const newMap = new Map(prev);
       let hasChanges = false;
-      
+
       sections.forEach(section => {
         if (!newMap.has(section.id)) {
           const editorData = section.contentType === "editorjs"
@@ -321,7 +321,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
               const sectionData = sectionEditorDataMap.get(section.id) || getSectionEditorData(section);
               const isEditing = editingSections.has(section.id);
               const sectionHasChanges = hasUnsavedChanges.get(section.id) || false;
-              
+
               return (
                 <TabsContent key={section.id} value={section.id}>
                   <div className="space-y-4">
@@ -330,9 +330,12 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
                         <h4 className="text-base font-semibold text-card-foreground">
                           {section.title}
                         </h4>
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => toggleEditMode(section.id)}
-                          className="rounded-md p-1 hover:bg-muted transition-colors"
+                          className="h-8 w-8 p-0"
                           aria-label={isEditing ? "Mode visualisation" : "Mode édition"}
                           title={isEditing ? "Passer en mode visualisation" : "Passer en mode édition"}
                         >
@@ -341,7 +344,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
                           ) : (
                             <Eye className="h-4 w-4 text-muted-foreground" />
                           )}
-                        </button>
+                        </Button>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         Modifié le{" "}
@@ -359,27 +362,27 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
                       minHeight={400}
                     />
 
-                  {/* Bouton sauvegarder (visible uniquement en mode édition) */}
-                  {isEditing && (
-                    <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/50 p-3">
-                      <span className="text-sm text-muted-foreground">
-                        {sectionHasChanges
-                          ? "⚠️ Modifications non sauvegardées"
-                          : "✓ Tout est sauvegardé"}
-                      </span>
-                      <Button
-                        onClick={() => handleSaveSection(section.id)}
-                        disabled={updateMutation.isPending || !sectionHasChanges}
-                        size="sm"
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        {updateMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-            );
+                    {/* Bouton sauvegarder (visible uniquement en mode édition) */}
+                    {isEditing && (
+                      <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/50 p-3">
+                        <span className="text-sm text-muted-foreground">
+                          {sectionHasChanges
+                            ? "⚠️ Modifications non sauvegardées"
+                            : "✓ Tout est sauvegardé"}
+                        </span>
+                        <Button
+                          onClick={() => handleSaveSection(section.id)}
+                          disabled={updateMutation.isPending || !sectionHasChanges}
+                          size="sm"
+                        >
+                          <Save className="mr-2 h-4 w-4" />
+                          {updateMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              );
             })}
           </Tabs>
 

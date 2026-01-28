@@ -61,13 +61,15 @@ export const getUserById = async (id: string): Promise<User | null> => {
 
 export const createUser = async (
   email: string,
-  hashedPassword: string
+  hashedPassword: string,
+  verificationToken?: string
 ): Promise<User> => {
   try {
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
+        verificationToken,
       },
     });
     return user;

@@ -4,6 +4,7 @@
  */
 
 import type { ReferenceData, ReferenceToolConfig, SearchResult } from "@/types/reference";
+import api from "@/lib/axios";
 
 // Type global pour notre instance de modal
 declare global {
@@ -14,7 +15,7 @@ declare global {
 
 export default class ReferenceTool {
   static title = "Référence";
-  
+
   private api: any;
   private block: any;
   private config: ReferenceToolConfig;
@@ -341,19 +342,14 @@ export default class ReferenceTool {
 
     try {
       const endpoint = this.config.searchEndpoint || "/api/search";
-      const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`, {
+      const { data } = await api.get(`${endpoint}?q=${encodeURIComponent(query)}`, {
         signal: this.abortController.signal,
       });
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de la recherche");
-      }
-
-      const data = await response.json();
       this.renderResults(data.results || [], resultsContainer);
-    } catch (error) {
+    } catch (error: any) {
       // Ignorer les erreurs d'annulation
-      if (error instanceof Error && error.name === "AbortError") {
+      if (error && error.name === "AbortError" || error.code === "ERR_CANCELED") {
         return;
       }
 

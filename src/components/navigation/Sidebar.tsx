@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { SearchModal } from "@/components/search/SearchModal";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 const navItems = [
@@ -56,10 +57,11 @@ export const Sidebar: React.FC = () => {
 
               if (item.type === "button") {
                 return (
-                  <button
+                  <Button
                     key={item.href}
+                    variant="ghost"
                     onClick={() => setSearchModalOpen(true)}
-                    className="w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 transition-all text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                    className="w-full justify-between px-4 py-6 h-auto text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground font-normal"
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="h-5 w-5" />
@@ -68,7 +70,7 @@ export const Sidebar: React.FC = () => {
                     <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
                       <span className="text-xs">⌘</span>K
                     </kbd>
-                  </button>
+                  </Button>
                 );
               }
 
@@ -98,13 +100,14 @@ export const Sidebar: React.FC = () => {
                 {session.user?.email}
               </p>
             </div>
-            <button
+            <Button
+              variant="ghost"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-muted-foreground transition-all hover:bg-accent/50 hover:text-accent-foreground"
+              className="w-full justify-start gap-3 px-4 py-6 h-auto text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground font-normal"
             >
               <LogOut className="h-5 w-5" />
               <span className="font-medium">Déconnexion</span>
-            </button>
+            </Button>
           </div>
         </div>
       </aside>

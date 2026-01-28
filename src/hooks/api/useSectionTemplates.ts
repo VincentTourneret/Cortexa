@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 type SectionTemplateItem = {
   id: string;
@@ -53,14 +54,7 @@ export const useSectionTemplates = () => {
   return useQuery({
     queryKey: sectionTemplatesKeys.lists(),
     queryFn: async (): Promise<SectionTemplate[]> => {
-      const response = await fetch("/api/section-templates");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error || "Erreur lors de la récupération des templates"
-        );
-      }
+      const { data } = await api.get("/api/section-templates");
 
       return data.templates || [];
     },
@@ -72,14 +66,7 @@ export const useSectionTemplate = (id: string) => {
   return useQuery({
     queryKey: sectionTemplatesKeys.detail(id),
     queryFn: async (): Promise<SectionTemplate> => {
-      const response = await fetch(`/api/section-templates/${id}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error || "Erreur lors de la récupération du template"
-        );
-      }
+      const { data } = await api.get(`/api/section-templates/${id}`);
 
       return data.template;
     },
@@ -93,19 +80,7 @@ export const useCreateSectionTemplate = () => {
 
   return useMutation({
     mutationFn: async (input: CreateSectionTemplateInput) => {
-      const response = await fetch("/api/section-templates", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la création");
-      }
+      const { data } = await api.post("/api/section-templates", input);
 
       return data.template;
     },
@@ -123,19 +98,7 @@ export const useUpdateSectionTemplate = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...input }: UpdateSectionTemplateInput) => {
-      const response = await fetch(`/api/section-templates/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la mise à jour");
-      }
+      const { data } = await api.put(`/api/section-templates/${id}`, input);
 
       return data.template;
     },
@@ -156,15 +119,7 @@ export const useDeleteSectionTemplate = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/section-templates/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
+      const { data } = await api.delete(`/api/section-templates/${id}`);
 
       return data;
     },

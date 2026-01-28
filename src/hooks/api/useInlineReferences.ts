@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 type InlineReference = {
   id: string;
@@ -24,19 +25,7 @@ export const useInlineReferences = (ids: string[]) => {
         return [];
       }
 
-      const response = await fetch("/api/inline-references", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des références");
-      }
+      const { data } = await api.post("/api/inline-references", { ids });
 
       return data.references || [];
     },

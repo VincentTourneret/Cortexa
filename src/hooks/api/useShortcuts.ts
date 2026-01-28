@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 type CardShortcut = {
   id: string;
@@ -40,12 +41,7 @@ export const useShortcuts = (folderId: string | null) => {
         return [];
       }
 
-      const response = await fetch(`/api/shortcuts?folderId=${folderId}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des raccourcis");
-      }
+      const { data } = await api.get(`/api/shortcuts?folderId=${folderId}`);
 
       return data.shortcuts || [];
     },
@@ -59,19 +55,7 @@ export const useCreateShortcut = () => {
 
   return useMutation({
     mutationFn: async (input: CreateShortcutInput) => {
-      const response = await fetch("/api/shortcuts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la création du raccourci");
-      }
+      const { data } = await api.post("/api/shortcuts", input);
 
       return data.shortcut;
     },
@@ -94,15 +78,7 @@ export const useDeleteShortcut = () => {
 
   return useMutation({
     mutationFn: async ({ id, folderId }: { id: string; folderId: string }) => {
-      const response = await fetch(`/api/shortcuts/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la suppression du raccourci");
-      }
+      const { data } = await api.delete(`/api/shortcuts/${id}`);
 
       return data;
     },

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
 
 type KnowledgeCardSummary = {
   id: string;
@@ -52,12 +53,7 @@ export const useKnowledgeCards = (folderId?: string | null) => {
       const url = folderId
         ? `/api/knowledge-cards?folderId=${folderId}`
         : "/api/knowledge-cards";
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des fiches");
-      }
+      const { data } = await api.get(url);
 
       return (data.cards || []).map((card: any) => ({
         id: card.id,
@@ -77,12 +73,7 @@ export const useKnowledgeCard = (id: string) => {
   return useQuery({
     queryKey: knowledgeCardsKeys.detail(id),
     queryFn: async (): Promise<KnowledgeCard> => {
-      const response = await fetch(`/api/knowledge-cards/${id}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération de la fiche");
-      }
+      const { data } = await api.get(`/api/knowledge-cards/${id}`);
 
       return data.card;
     },
@@ -95,19 +86,7 @@ export const useCreateKnowledgeCard = () => {
 
   return useMutation({
     mutationFn: async (input: CreateKnowledgeCardInput) => {
-      const response = await fetch("/api/knowledge-cards", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la création");
-      }
+      const { data } = await api.post("/api/knowledge-cards", input);
 
       return data.card;
     },
@@ -124,19 +103,7 @@ export const useUpdateKnowledgeCard = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...input }: UpdateKnowledgeCardInput) => {
-      const response = await fetch(`/api/knowledge-cards/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la mise à jour");
-      }
+      const { data } = await api.patch(`/api/knowledge-cards/${id}`, input);
 
       return data.card;
     },
@@ -154,15 +121,7 @@ export const useDeleteKnowledgeCard = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/knowledge-cards/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la suppression");
-      }
+      const { data } = await api.delete(`/api/knowledge-cards/${id}`);
 
       return data;
     },
@@ -184,19 +143,7 @@ export const useReorderKnowledgeCards = () => {
 
   return useMutation({
     mutationFn: async (input: ReorderKnowledgeCardsInput) => {
-      const response = await fetch("/api/knowledge-cards/reorder", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(input),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors du réordonnancement");
-      }
+      const { data } = await api.put("/api/knowledge-cards/reorder", input);
 
       return data;
     },
@@ -208,4 +155,3 @@ export const useReorderKnowledgeCards = () => {
     },
   });
 };
-

@@ -4,6 +4,8 @@ import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { loginSchema } from "@/lib/validations";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -37,7 +39,13 @@ export const LoginForm = () => {
       });
 
       if (result?.error) {
-        setError("Email ou mot de passe incorrect");
+        // Si C'est une erreur de credentials, NextAuth renvoie "CredentialsSignin"
+        if (result.error === "CredentialsSignin") {
+          setError("Email ou mot de passe incorrect");
+        } else {
+          // Sinon on affiche le message d'erreur spécifique (ex: "Veuillez vérifier votre email...")
+          setError(result.error);
+        }
         setIsLoading(false);
         return;
       }
@@ -76,9 +84,17 @@ export const LoginForm = () => {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-sm font-medium text-foreground">
-          Mot de passe
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className="text-sm font-medium text-foreground">
+            Mot de passe
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Mot de passe oublié ?
+          </Link>
+        </div>
         <input
           id="password"
           type="password"
@@ -90,13 +106,13 @@ export const LoginForm = () => {
         />
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={isLoading}
-        className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 w-full"
       >
         {isLoading ? "Connexion..." : "Se connecter"}
-      </button>
+      </Button>
     </form>
   );
 };

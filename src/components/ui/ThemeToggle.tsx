@@ -2,14 +2,17 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { Button } from "@/components/ui/button";
 
 export const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={toggleTheme}
-      className="flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-accent"
+      className="rounded-lg hover:bg-accent"
       aria-label={`Basculer vers le thème ${theme === "light" ? "sombre" : "clair"}`}
       type="button"
     >
@@ -18,6 +21,6 @@ export const ThemeToggle: React.FC = () => {
       ) : (
         <Sun className="h-5 w-5 text-foreground" />
       )}
-    </button>
+    </Button>
   );
 };

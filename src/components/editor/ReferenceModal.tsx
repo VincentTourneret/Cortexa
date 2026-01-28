@@ -13,6 +13,7 @@ import {
 import { EditorJSWrapper } from "@/components/editor/EditorJSWrapper";
 import type { CardContent, SectionContent } from "@/types/reference";
 import type { EditorJSData } from "@/lib/content-converter";
+import api from "@/lib/axios";
 
 interface ReferenceModalProps {
   isOpen: boolean;
@@ -42,16 +43,9 @@ export function ReferenceModal({
       setError(null);
 
       try {
-        const response = await fetch(`/api/knowledge-cards/${cardId}`);
+        const response = await api.get(`/api/knowledge-cards/${cardId}`);
+        const data = response.data;
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || "Erreur lors du chargement du contenu"
-          );
-        }
-
-        const data = await response.json();
         setCard(data.card);
 
         // Si on veut afficher une section spécifique, la trouver
@@ -61,12 +55,10 @@ export function ReferenceModal({
           );
           setSection(foundSection || null);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erreur lors du chargement:", err);
         setError(
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement du contenu"
+          err.response?.data?.error || err.message || "Erreur lors du chargement du contenu"
         );
       } finally {
         setLoading(false);
@@ -124,12 +116,12 @@ export function ReferenceModal({
   // Construire l'URL de navigation
   const getNavigationUrl = (): string | null => {
     if (!cardId) return null;
-    
+
     // Si on affiche une section spécifique, ajouter l'ancre
     if (sectionId) {
       return `/knowledge/${cardId}#${sectionId}`;
     }
-    
+
     // Sinon, simplement la page de la fiche
     return `/knowledge/${cardId}`;
   };

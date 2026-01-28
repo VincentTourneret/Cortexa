@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { SearchModal } from "@/components/search/SearchModal";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/account", icon: User, label: "Compte", type: "link" as const },
@@ -35,14 +36,15 @@ export const MobileNavbar: React.FC = () => {
 
                 if (item.type === "button") {
                   return (
-                    <button
+                    <Button
                       key={item.href}
+                      variant="ghost"
                       onClick={() => setSearchModalOpen(true)}
-                      className="flex flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                      className="flex-col gap-1 h-auto py-2 rounded-xl text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
                       aria-label={item.label}
                     >
                       <Icon className="h-6 w-6" />
-                    </button>
+                    </Button>
                   );
                 }
 
@@ -50,11 +52,10 @@ export const MobileNavbar: React.FC = () => {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all ${
-                      isActive
+                    className={`flex flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all ${isActive
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
-                    }`}
+                      }`}
                     aria-label={item.label}
                   >
                     <Icon className="h-6 w-6" />

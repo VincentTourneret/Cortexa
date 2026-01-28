@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { Switch } from "@/components/ui/switch";
 import { Moon, Sun } from "lucide-react";
+import api from "@/lib/axios";
 
 export const ThemeSettings: React.FC = () => {
-  const { data: session, update } = useSession();
+  const { update } = useSession();
   const { theme, toggleTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Utiliser directement le thème depuis le contexte
   const isDark = theme === "dark";
 
@@ -26,18 +27,7 @@ export const ThemeSettings: React.FC = () => {
       }
 
       // Mettre à jour en base de données
-      const response = await fetch("/api/auth/update-theme", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ theme: newTheme }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Erreur lors de la mise à jour du thème");
-      }
+      await api.post("/api/auth/update-theme", { theme: newTheme });
 
       // Mettre à jour la session pour synchroniser avec la BDD
       // Cela va déclencher le callback JWT avec trigger="update"

@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useReferenceSearchWithDebounce } from "@/hooks/api/useReferenceSearchWithDebounce";
 import type { SearchResult } from "@/types/reference";
 
@@ -100,29 +101,30 @@ export const SelectCardDialog: React.FC<SelectCardDialogProps> = ({
           {!isLoading && !error && cardResults.length > 0 && (
             <div className="space-y-2 mt-4">
               {cardResults.map((result) => (
-                <button
+                <Button
                   key={`card-${result.id}`}
+                  variant="outline"
                   onClick={() => handleCardClick(result.cardId)}
-                  className="w-full text-left p-4 rounded-lg border border-border bg-card hover:bg-accent hover:border-accent-foreground/20 transition-all duration-200 group"
+                  className="w-full justify-start h-auto p-4 whitespace-normal text-left bg-card hover:bg-accent border-border"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 text-muted-foreground group-hover:text-accent-foreground">
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="mt-0.5 text-muted-foreground">
                       <FileText className="h-5 w-5" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-foreground group-hover:text-accent-foreground">
+                      <div className="font-medium text-foreground">
                         {result.title}
                       </div>
 
                       {result.summary && (
-                        <div className="text-sm text-muted-foreground mt-1 line-clamp-2 group-hover:text-accent-foreground/70">
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {result.summary}
                         </div>
                       )}
                     </div>
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           )}

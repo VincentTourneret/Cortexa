@@ -3,6 +3,8 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { registerSchema } from "@/lib/validations";
+import api from "@/lib/axios";
+import { Button } from "@/components/ui/button";
 
 export const RegisterForm = () => {
   const router = useRouter();
@@ -26,24 +28,12 @@ export const RegisterForm = () => {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || "Une erreur est survenue");
-        setIsLoading(false);
-        return;
-      }
+      await api.post("/api/auth/register", { email, password });
 
       // Rediriger vers la page de login après inscription réussie
       router.push("/login?registered=true");
-    } catch (err) {
-      setError("Une erreur est survenue lors de l'inscription");
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Une erreur est survenue lors de l'inscription");
       setIsLoading(false);
     }
   };
@@ -89,13 +79,13 @@ export const RegisterForm = () => {
         </p>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={isLoading}
-        className="mt-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 w-full"
       >
         {isLoading ? "Création..." : "Créer un compte"}
-      </button>
+      </Button>
     </form>
   );
 };

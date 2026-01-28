@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { registerSchema } from "@/lib/validations";
 import { getUserByEmail, createUser } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import { sendVerificationEmail } from "@/lib/mail";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -32,12 +33,18 @@ export const POST = async (req: NextRequest) => {
     // Hasher le mot de passe
     const hashedPassword = await hashPassword(password);
 
-    // Créer l'utilisateur
-    const user = await createUser(email, hashedPassword);
+    // Créer un token de vérification
+    const verificationToken = crypto.randomUUID();
+
+    // Créer l'utilisateur avec le token
+    const user = await createUser(email, hashedPassword, verificationToken);
+
+    // Envoyer l'email de vérification
+    await sendVerificationEmail(email, verificationToken);
 
     return NextResponse.json(
       {
-        message: "Compte créé avec succès",
+        message: "Compte créé avec succès. Veuillez vérifier votre email pour activer votre compte.",
         user: {
           id: user.id,
           email: user.email,

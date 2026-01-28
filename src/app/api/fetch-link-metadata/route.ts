@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import axios from "axios";
 
 const linkMetadataSchema = z.object({
   url: z.string().url(),
@@ -27,15 +28,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Récupérer les métadonnées du lien
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; LinkPreviewBot/1.0)",
-      },
-      signal: AbortSignal.timeout(5000), // Timeout de 5 secondes
-    });
-
-    if (!response.ok) {
+    // Récupérer les métadonnées du lien avec axios
+    let html = "";
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; LinkPreviewBot/1.0)",
+        },
+        timeout: 5000, // Timeout de 5 secondes
+        responseType: "text", // Obtenir le HTML en texte
+      });
+      html = response.data;
+    } catch (fetchError) {
+      // En cas d'erreur de récupération, on retourne quand même un succès mais avec des métadonnées vides
+      // C'est le comportement attendu pour ne pas bloquer l'interface
       return NextResponse.json(
         {
           success: 1,
@@ -50,8 +56,6 @@ export async function GET(request: NextRequest) {
         { status: 200 }
       );
     }
-
-    const html = await response.text();
 
     // Parser le HTML pour extraire les métadonnées
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
