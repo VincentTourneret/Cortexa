@@ -94,7 +94,9 @@ export const Sidebar: React.FC = () => {
           <div className="mt-auto space-y-2 border-t border-border/50 pt-4">
             <div className="px-4 py-2">
               <p className="text-sm font-medium text-foreground">
-                {session.user?.name || session.user?.email}
+                {session.user?.firstName && session.user?.lastName
+                  ? `${session.user.firstName} ${session.user.lastName}`
+                  : session.user?.name || session.user?.email}
               </p>
               <p className="text-xs text-muted-foreground">
                 {session.user?.email}

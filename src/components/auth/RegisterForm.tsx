@@ -10,6 +10,8 @@ export const RegisterForm = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,7 +21,7 @@ export const RegisterForm = () => {
     setIsLoading(true);
 
     // Validation côté client
-    const validationResult = registerSchema.safeParse({ email, password });
+    const validationResult = registerSchema.safeParse({ email, password, firstName, lastName });
     if (!validationResult.success) {
       const firstError = validationResult.error.issues[0];
       setError(firstError?.message || "Erreur de validation");
@@ -28,7 +30,7 @@ export const RegisterForm = () => {
     }
 
     try {
-      await api.post("/api/auth/register", { email, password });
+      await api.post("/api/auth/register", { email, password, firstName, lastName });
 
       // Rediriger vers la page de login après inscription réussie
       router.push("/login?registered=true");
@@ -45,6 +47,37 @@ export const RegisterForm = () => {
           {error}
         </div>
       )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="firstName" className="text-sm font-medium text-foreground">
+            Prénom
+          </label>
+          <input
+            id="firstName"
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+            className="rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+            placeholder="Jean"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="lastName" className="text-sm font-medium text-foreground">
+            Nom
+          </label>
+          <input
+            id="lastName"
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+            className="rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+            placeholder="Dupont"
+          />
+        </div>
+      </div>
 
       <div className="flex flex-col gap-2">
         <label htmlFor="email" className="text-sm font-medium text-foreground">

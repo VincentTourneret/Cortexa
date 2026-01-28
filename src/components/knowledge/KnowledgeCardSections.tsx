@@ -128,7 +128,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
     }
   };
 
-  const handleSaveSection = async (sectionId: string) => {
+  const handleSaveSection = useCallback(async (sectionId: string) => {
     const activeSection = sections.find((s) => s.id === sectionId);
     if (!activeSection) {
       return;
@@ -164,7 +164,7 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
         error instanceof Error ? error.message : "Erreur serveur. Réessayez."
       );
     }
-  };
+  }, [sections, sectionEditorDataMap, card.id, updateMutation]);
 
   const handleSectionEditorChange = useCallback((sectionId: string) =>
     (data: EditorJSData) => {
@@ -268,6 +268,23 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
       setDialogEditorData({ blocks: [] });
     }
   };
+
+  // Raccourci clavier pour sauvegarder (Cmd+S / Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "s") {
+        if (activeTab && editingSections.has(activeTab)) {
+          event.preventDefault();
+          handleSaveSection(activeTab);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeTab, editingSections, handleSaveSection]);
 
   return (
     <div className="space-y-6">

@@ -56,6 +56,8 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
           theme: user.theme || "light",
         };
       },
@@ -75,6 +77,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
         token.theme = user.theme || "light";
       }
 
@@ -84,6 +88,8 @@ export const authOptions: NextAuthOptions = {
         const updatedUser = await getUserByEmail(token.email as string);
         if (updatedUser) {
           token.theme = updatedUser.theme || "light";
+          token.firstName = updatedUser.firstName;
+          token.lastName = updatedUser.lastName;
         }
         // Ou utiliser les données passées dans session.update()
         if (session.user.theme !== undefined) {
@@ -97,6 +103,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        session.user.firstName = token.firstName;
+        session.user.lastName = token.lastName;
         session.user.theme = (token.theme as string) || "light";
       }
       return session;

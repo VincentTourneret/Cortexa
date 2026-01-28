@@ -13,13 +13,13 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json(
         {
           error: "Données invalides",
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         { status: 400 }
       );
     }
 
-    const { email, password } = validationResult.data;
+    const { email, password, firstName, lastName } = validationResult.data;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await getUserByEmail(email);
@@ -37,7 +37,7 @@ export const POST = async (req: NextRequest) => {
     const verificationToken = crypto.randomUUID();
 
     // Créer l'utilisateur avec le token
-    const user = await createUser(email, hashedPassword, verificationToken);
+    const user = await createUser(email, hashedPassword, verificationToken, firstName, lastName);
 
     // Envoyer l'email de vérification
     await sendVerificationEmail(email, verificationToken);
