@@ -1,15 +1,14 @@
 import { PrismaClient, User } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const databaseUrl = process.env.DATABASE_URL || "file:./dev.db";
-
-const adapter = new PrismaLibSql({
-  url: databaseUrl,
-});
+const connectionString = process.env.DATABASE_URL || "postgresql://cortexa:cortexa_password@localhost:5433/cortexa_db?schema=public";
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -19,17 +18,6 @@ export const prisma =
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-// Activer les clés étrangères pour SQLite à chaque connexion
-// Note: LibSQL devrait les activer automatiquement, mais on s'assure qu'elles sont activées
-if (databaseUrl.startsWith("file:")) {
-  // Utiliser $connect pour s'assurer que la connexion est établie
-  prisma.$connect().then(() => {
-    return prisma.$executeRaw`PRAGMA foreign_keys = ON;`;
-  }).catch((error) => {
-    console.warn("Impossible d'activer les clés étrangères SQLite:", error);
-  });
-}
 
 // Export du type User depuis Prisma
 export type { User };

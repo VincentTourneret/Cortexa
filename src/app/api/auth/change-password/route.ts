@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { changePasswordSchema } from "@/lib/validations";
 import { getUserById, updateUserPassword } from "@/lib/db";
 import { verifyPassword, hashPassword } from "@/lib/auth";
@@ -23,7 +23,7 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json(
         {
           error: "Données invalides",
-          details: validationResult.error.errors,
+          details: validationResult.error.flatten(),
         },
         { status: 400 }
       );

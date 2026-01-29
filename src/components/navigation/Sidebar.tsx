@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Home, Search, User, LogOut } from "lucide-react";
+import { Home, Search, User, LogOut, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -11,6 +11,7 @@ import Image from "next/image";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Accueil", type: "link" as const },
+
   { href: "/search", icon: Search, label: "Recherche", type: "button" as const },
   { href: "/account", icon: User, label: "Compte", type: "link" as const },
 ];

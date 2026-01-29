@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         sessionEmail: session.user.email,
       });
       return NextResponse.json(
-        { 
+        {
           error: "Votre compte n'existe pas dans la base de données. Veuillez vous déconnecter et vous reconnecter.",
           code: "USER_NOT_FOUND"
         },
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Données invalides", details: error.errors },
+        { error: "Données invalides", details: error.flatten() },
         { status: 400 }
       );
     }
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       if (prismaError.code === "P2003") {
         console.error("Erreur de contrainte de clé étrangère:", prismaError);
         return NextResponse.json(
-          { 
+          {
             error: "Erreur de référence : l'utilisateur ou le dossier parent n'existe pas",
             details: process.env.NODE_ENV === "development" ? prismaError.meta : undefined
           },
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     console.error("Erreur lors de la création du dossier:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Erreur serveur",
         details: process.env.NODE_ENV === "development" && error instanceof Error ? error.message : undefined
       },

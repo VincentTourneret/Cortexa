@@ -7,7 +7,9 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { ThemeSettings } from "@/components/account/ThemeSettings";
 import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 import { SectionTemplatesManager } from "@/components/account/SectionTemplatesManager";
-import { Lock, Palette, FileText, User } from "lucide-react";
+import { Lock, Palette, FileText, User, Users } from "lucide-react";
+import { CreateGroupModal } from "@/components/groups/CreateGroupModal";
+import { GroupList } from "@/components/groups/GroupList";
 
 interface AccountNavigationProps {
   session: Session;
@@ -24,6 +26,7 @@ export const AccountNavigation: React.FC<AccountNavigationProps> = ({
     if (pathname === "/account/password") return "password";
     if (pathname === "/account/theme") return "theme";
     if (pathname === "/account/sections") return "sections";
+    if (pathname === "/account/groups") return "groups";
     return "profile";
   };
 
@@ -38,10 +41,14 @@ export const AccountNavigation: React.FC<AccountNavigationProps> = ({
   return (
     <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
       <div className="flex items-center justify-between mb-6">
-        <TabsList className="grid w-full max-w-md grid-cols-4">
+        <TabsList className="grid w-full max-w-md grid-cols-5">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profil</span>
+          </TabsTrigger>
+          <TabsTrigger value="groups" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Groupes</span>
           </TabsTrigger>
           <TabsTrigger value="password" className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
@@ -103,6 +110,21 @@ export const AccountNavigation: React.FC<AccountNavigationProps> = ({
       <TabsContent value="sections" className="mt-6">
         <div className="rounded-lg bg-card p-8 shadow-lg border border-border">
           <SectionTemplatesManager />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="groups" className="mt-6">
+        <div className="rounded-lg bg-card p-8 shadow-lg border border-border">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-card-foreground">Groupes</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Gérez vos groupes et les membres avec qui vous partagez du contenu.
+              </p>
+            </div>
+            <CreateGroupModal />
+          </div>
+          <GroupList />
         </div>
       </TabsContent>
     </Tabs>

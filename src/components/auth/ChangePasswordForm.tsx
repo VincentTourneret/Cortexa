@@ -27,7 +27,7 @@ export const ChangePasswordForm = () => {
     });
 
     if (!validationResult.success) {
-      setError(validationResult.error.errors[0].message);
+      setError((validationResult.error as any).errors[0].message);
       setIsLoading(false);
       return;
     }

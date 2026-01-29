@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cortexa_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: cortexa_db
+      POSTGRES_USER: cortexa
+      POSTGRES_PASSWORD: cortexa_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - cortexa_postgres_data:/var/lib/postgresql/data
+
+  seaweedfs:
+    build:
+      context: ./docker/seaweedfs
+      dockerfile: Dockerfile
+    container_name: cortexa_storage
+    restart: always
+    environment:
+      - ADMIN_KEY=${ADMIN_KEY}
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - APP_KEY=${APP_KEY}
+      - APP_SECRET=${APP_SECRET}
+    ports:
+      - "8333:8333" # S3 Proxy
+      - "8888:8888" # Filer
+      - "9333:9333" # Master
+    volumes:
+      - cortexa_seaweed_data:/data
+
+volumes:
+  cortexa_postgres_data:
+  cortexa_seaweed_data:

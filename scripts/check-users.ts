@@ -1,6 +1,3 @@
-
-import { PrismaClient } from "@prisma/client";
-
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 

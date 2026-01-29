@@ -1,0 +1,33 @@
+{
+    "identities": [
+        {
+            "name": "admin-global",
+            "credentials": [
+                {
+                    "accessKey": "${ADMIN_KEY}",
+                    "secretKey": "${ADMIN_SECRET}"
+                }
+            ],
+            "actions": [
+                "Admin",
+                "Read",
+                "Write"
+            ]
+        },
+        {
+            "name": "app-user",
+            "credentials": [
+                {
+                    "accessKey": "${APP_KEY}",
+                    "secretKey": "${APP_SECRET}"
+                }
+            ],
+            "actions": [
+                "Admin:app",
+                "Read:app",
+                "Write:app",
+                "List:app"
+            ]
+        }
+    ]
+}

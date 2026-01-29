@@ -168,6 +168,19 @@ export const editorJSToText = (data: EditorJSData): string => {
         }
         break;
 
+      case "accordion":
+        if (block.data.title) {
+          lines.push(`[Accordéon: ${block.data.title}]`);
+        }
+        if (block.data.content && block.data.content.blocks) {
+          // Utilisation récursive simplifiée pour le contenu de l'accordéon
+          const nestedText = editorJSToText(block.data.content);
+          if (nestedText) {
+            lines.push(nestedText.split('\n').map(l => `  ${l}`).join('\n'));
+          }
+        }
+        break;
+
       default:
         // Pour les autres types (image, embed, etc.), on ignore ou on ajoute un placeholder
         if (block.data.text) {

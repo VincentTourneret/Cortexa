@@ -15,6 +15,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { useUpdateKnowledgeCard } from "@/hooks/api/useKnowledgeCards";
 import { getColorBackgroundClasses, getColorBackgroundStyle, isDarkColor } from "@/lib/color-utils";
 import { KnowledgeCardSummary, ViewMode } from "./types";
+import { ShareModal } from "@/components/sharing/ShareModal";
 
 interface KnowledgeCardItemProps {
     card: KnowledgeCardSummary;
@@ -32,6 +33,7 @@ export const KnowledgeCardItem: React.FC<KnowledgeCardItemProps> = ({
     onDelete,
 }) => {
     const updateCardMutation = useUpdateKnowledgeCard();
+    const [isShareOpen, setIsShareOpen] = React.useState(false);
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
         useSortable({
             id: isShortcut ? `shortcut-${card.id}` : `card-${card.id}`,
@@ -81,6 +83,15 @@ export const KnowledgeCardItem: React.FC<KnowledgeCardItemProps> = ({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                        onSelect={(event) => {
+                            event.preventDefault();
+                            setIsShareOpen(true);
+                        }}
+                    >
+                        Partager
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <div className="px-2 py-1.5">
                         <div className="text-sm text-muted-foreground mb-1.5">
                             Couleur
@@ -100,6 +111,13 @@ export const KnowledgeCardItem: React.FC<KnowledgeCardItemProps> = ({
                         Supprimer
                     </DropdownMenuItem>
                 </DropdownMenuContent>
+                <ShareModal
+                    resourceId={card.id}
+                    resourceType="CARD"
+                    resourceName={card.title}
+                    open={isShareOpen}
+                    onOpenChange={setIsShareOpen}
+                />
             </DropdownMenu>
         </div>
     );

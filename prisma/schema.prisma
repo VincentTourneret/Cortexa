@@ -3,10 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
@@ -26,6 +27,12 @@ model User {
   knowledgeCards KnowledgeCard[]
   sectionTemplates SectionTemplate[]
 
+  // Relations pour les Groupes et Partages
+  ownedGroups     Group[]          @relation("GroupOwner")
+  groupMemberships GroupMember[]
+  sharedWithMe    SharedResource[]
+  sentInvitations Invitation[]     @relation("SentInvitations")
+
   @@map("users")
 }
 
@@ -44,6 +51,7 @@ model Folder {
   children    Folder[] @relation("FolderTree")
   knowledgeCards KnowledgeCard[]
   shortcuts   CardShortcut[]
+  shares      SharedResource[]
 
   @@map("folders")
   @@index([userId])
@@ -70,8 +78,9 @@ model KnowledgeCard {
   linksFrom InlineReference[] @relation("SourceCard")
   linksTo   InlineReference[] @relation("TargetCard")
   
-  // Relations pour les raccourcis
+  // Relations pour les raccourcis et partages
   shortcuts CardShortcut[]
+  shares    SharedResource[]
 
   @@map("knowledge_cards")
   @@index([userId])
@@ -182,4 +191,80 @@ model CardShortcut {
   @@index([cardId])
   @@index([folderId, order])
   @@unique([folderId, cardId])
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner           User             @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members         GroupMember[]
+  sharedResources SharedResource[]
+  invitations     Invitation[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  userId   String
+  role     String   @default("MEMBER") // ADMIN, MEMBER
+  joinedAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+model SharedResource {
+  id String @id @default(uuid())
+
+  folderId String?
+  cardId   String?
+
+  sharedWithUserId  String?
+  sharedWithGroupId String?
+
+  permissions String   @default("READ") // READ, WRITE
+  createdAt   DateTime @default(now())
+
+  folder Folder?        @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  card   KnowledgeCard? @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  user  User?  @relation(fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [sharedWithGroupId], references: [id], onDelete: Cascade)
+
+  @@map("shared_resources")
+  @@index([folderId])
+  @@index([cardId])
+  @@index([sharedWithUserId])
+  @@index([sharedWithGroupId])
+}
+
+model Invitation {
+  id           String    @id @default(uuid())
+  email        String
+  token        String    @unique
+  type         String // GROUP_INVITE, RESOURCE_SHARE
+  resourceType String? // FOLDER, CARD (only if type is RESOURCE_SHARE)
+  resourceId   String? // (only if type is RESOURCE_SHARE)
+  groupId      String? // (only if type is GROUP_INVITE)
+  senderId     String
+  status       String    @default("PENDING") // PENDING, ACCEPTED, EXPIRED
+  permissions  String? // READ, WRITE (for resource sharing)
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime
+
+  sender User   @relation("SentInvitations", fields: [senderId], references: [id], onDelete: Cascade)
+  group  Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@map("invitations")
+  @@index([email])
+  @@index([token])
 }

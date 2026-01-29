@@ -15,6 +15,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { useUpdateFolder } from "@/hooks/api/useFolders";
 import { getColorBackgroundClasses, getColorBackgroundStyle, isDarkColor } from "@/lib/color-utils";
 import { Folder, ViewMode } from "./types";
+import { ShareModal } from "@/components/sharing/ShareModal";
 
 interface SortableFolderProps {
     folder: Folder;
@@ -57,6 +58,8 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
     } = useSortable({
         id: folder.id,
     });
+
+    const [isShareOpen, setIsShareOpen] = React.useState(false);
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -141,6 +144,15 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
                                         <DropdownMenuItem
                                             onSelect={(event) => {
                                                 event.preventDefault();
+                                                setIsShareOpen(true);
+                                            }}
+                                        >
+                                            Partager
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onSelect={(event) => {
+                                                event.preventDefault();
                                                 onRename(folder);
                                             }}
                                         >
@@ -166,6 +178,13 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
                                             Supprimer
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
+                                    <ShareModal
+                                        resourceId={folder.id}
+                                        resourceType="FOLDER"
+                                        resourceName={folder.name}
+                                        open={isShareOpen}
+                                        onOpenChange={setIsShareOpen}
+                                    />
                                 </DropdownMenu>
                             </div>
                         </div>
@@ -174,7 +193,7 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
                 {/* Zone de drop pour le changement de parent - active seulement pendant le drag */}
                 <div
                     ref={setDroppableRef}
-                    className={`absolute inset-2 z-20 rounded-lg transition-all ${showDropIndicator ? "border-primary border-2 bg-accent/50" : ""
+                    className={`absolute inset-x-8 inset-y-4 z-20 rounded-lg transition-all ${showDropIndicator ? "border-primary border-2 bg-accent/50" : ""
                         }`}
                     style={{ pointerEvents: isDraggingOther ? "auto" : "none" }}
                 >
@@ -235,6 +254,15 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
                                         <DropdownMenuItem
                                             onSelect={(event) => {
                                                 event.preventDefault();
+                                                setIsShareOpen(true);
+                                            }}
+                                        >
+                                            Partager
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onSelect={(event) => {
+                                                event.preventDefault();
                                                 onRename(folder);
                                             }}
                                         >
@@ -260,6 +288,13 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
                                             Supprimer
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
+                                    <ShareModal
+                                        resourceId={folder.id}
+                                        resourceType="FOLDER"
+                                        resourceName={folder.name}
+                                        open={isShareOpen}
+                                        onOpenChange={setIsShareOpen}
+                                    />
                                 </DropdownMenu>
                             </div>
                         </div>
@@ -275,7 +310,7 @@ export const SortableFolder: React.FC<SortableFolderProps> = ({
             {/* Zone de drop pour le changement de parent - active seulement pendant le drag */}
             <div
                 ref={setDroppableRef}
-                className={`absolute inset-2 z-20 rounded-lg transition-all ${showDropIndicator ? "border-primary border-2 bg-accent/50" : ""
+                className={`absolute inset-x-8 inset-y-4 z-20 rounded-lg transition-all ${showDropIndicator ? "border-primary border-2 bg-accent/50" : ""
                     }`}
                 style={{ pointerEvents: isDraggingOther ? "auto" : "none" }}
             >

@@ -265,9 +265,17 @@ export const FolderList: React.FC<FolderListProps> = ({
     if (draggedFolderId.startsWith("card-")) {
       const cardId = draggedFolderId.replace("card-", "");
 
-      // Déplacement vers un dossier ou la racine
-      if (targetId === "root" || targetId.startsWith("drop-")) {
-        const nextFolderId = targetId === "root" ? null : targetId.replace("drop-", "");
+      // Déplacement vers un dossier, la racine ou le breadcrumb
+      if (targetId === "root" || targetId.startsWith("drop-") || targetId.startsWith("breadcrumb-")) {
+        let nextFolderId: string | null = null;
+
+        if (targetId === "root" || targetId === "breadcrumb-root") {
+          nextFolderId = null;
+        } else if (targetId.startsWith("drop-")) {
+          nextFolderId = targetId.replace("drop-", "");
+        } else if (targetId.startsWith("breadcrumb-")) {
+          nextFolderId = targetId.replace("breadcrumb-", "");
+        }
 
         try {
           await updateCardMutation.mutateAsync({
@@ -327,14 +335,18 @@ export const FolderList: React.FC<FolderListProps> = ({
     const draggedFolder = folders.find((f) => f.id === draggedFolderId);
     if (!draggedFolder) return;
 
-    // Si on dépose sur "root", c'est un changement de parent vers la racine
-    if (targetId === "root") {
+    // Si on dépose sur "root" ou un élément du breadcrumb, c'est un changement de parent vers un ancêtre
+    if (targetId === "root" || targetId.startsWith("breadcrumb-")) {
+      const nextParentId = targetId === "root" || targetId === "breadcrumb-root"
+        ? null
+        : targetId.replace("breadcrumb-", "");
+
       setHasDragged(true);
 
       try {
         await updateFolderMutation.mutateAsync({
           id: draggedFolderId,
-          parentId: null,
+          parentId: nextParentId,
         });
       } catch (error) {
         console.error("Erreur lors du déplacement du dossier:", error);

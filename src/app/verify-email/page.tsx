@@ -6,7 +6,9 @@ import Link from "next/link";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import axios from "axios";
 
-export default function VerifyEmailPage() {
+import { Suspense } from "react";
+
+function VerifyEmailContent() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
     const email = searchParams.get("email");
@@ -92,5 +94,17 @@ export default function VerifyEmailPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function VerifyEmailPage() { // Changed to default export
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <Loader2 className="h-16 w-16 animate-spin text-blue-500" />
+            </div>
+        }>
+            <VerifyEmailContent />
+        </Suspense>
     );
 }

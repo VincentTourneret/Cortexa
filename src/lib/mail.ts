@@ -58,3 +58,50 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     html,
   });
 };
+
+export const sendGroupInvitationEmail = async (email: string, groupName: string, inviteLink: string) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Invitation à rejoindre un groupe</h2>
+      <p>Vous avez été invité à rejoindre le groupe <strong>${groupName}</strong> sur Cortexa.</p>
+      <p>Pour accepter l'invitation, cliquez sur le bouton ci-dessous :</p>
+      <a href="${inviteLink}" style="display: inline-block; padding: 12px 24px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px; margin: 16px 0;">
+        Rejoindre le groupe
+      </a>
+      <p>Ou copiez ce lien dans votre navigateur :</p>
+      <p><a href="${inviteLink}">${inviteLink}</a></p>
+      <p>Si vous n'avez pas de compte, vous serez invité à en créer un rapidement.</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || '"Cortexa Support" <noreply@example.com>',
+    to: email,
+    subject: `Invitation à rejoindre le groupe ${groupName}`,
+    html,
+  });
+};
+
+export const sendShareInvitationEmail = async (email: string, resourceName: string, inviteLink: string, isFolder: boolean) => {
+  const resourceType = isFolder ? "dossier" : "document";
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Partage de ${resourceType}</h2>
+      <p>On vous a partagé le ${resourceType} <strong>${resourceName}</strong> sur Cortexa.</p>
+      <p>Pour y accéder, cliquez sur le bouton ci-dessous :</p>
+      <a href="${inviteLink}" style="display: inline-block; padding: 12px 24px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px; margin: 16px 0;">
+        Voir le ${resourceType}
+      </a>
+      <p>Ou copiez ce lien dans votre navigateur :</p>
+      <p><a href="${inviteLink}">${inviteLink}</a></p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || '"Cortexa Support" <noreply@example.com>',
+    to: email,
+    subject: `Partage de document : ${resourceName}`,
+    html,
+  });
+};

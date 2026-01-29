@@ -86,6 +86,8 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
           { default: FontSizeTool },
           { default: ReferenceTool },
           { default: InlineReferenceTool },
+          { default: AccordionTool },
+          { default: ImageResizeTune },
         ] = await Promise.all([
           import("@editorjs/editorjs"),
           import("@editorjs/header"),
@@ -103,6 +105,8 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
           import("./tools/FontSizeTool"),
           import("./tools/ReferenceTool"),
           import("./tools/InlineReferenceTool"),
+          import("./tools/AccordionTool"),
+          import("./tools/ImageResizeTune"),
         ]);
 
         if (!isMounted) return;
@@ -188,6 +192,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
             },
             image: {
               class: ImageTool,
+              tunes: ["imageResizeTune"],
               config: {
                 endpoints: {
                   byFile: "/api/upload-image",
@@ -198,6 +203,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
                 },
               },
             },
+            imageResizeTune: ImageResizeTune,
             embed: {
               class: Embed,
               config: {
@@ -233,6 +239,9 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
               config: {
                 searchEndpoint: "/api/search",
               },
+            },
+            accordion: {
+              class: AccordionTool,
             },
           },
           i18n: {
@@ -275,6 +284,7 @@ const EditorJSWrapperComponent: React.FC<EditorJSWrapperProps> = ({
                 Embed: "Intégration",
                 "Taille de police": "Taille de police",
                 Reference: "Référence",
+                Accordeon: "Accordéon",
               },
               tools: {
                 warning: {

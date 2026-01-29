@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/db";
 import type { SearchResult } from "@/types/reference";
 
@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
         userId: session.user.id,
         title: {
           contains: searchTerm,
+          mode: "insensitive",
         },
       },
       select: {
@@ -87,6 +88,7 @@ export async function GET(request: NextRequest) {
           where: {
             title: {
               contains: searchTerm,
+              mode: "insensitive",
             },
           },
           orderBy: {
@@ -159,12 +161,12 @@ export async function GET(request: NextRequest) {
       const bExact = b.title.toLowerCase() === searchTerm;
       if (aExact && !bExact) return -1;
       if (!aExact && bExact) return 1;
-      
+
       const aStarts = a.title.toLowerCase().startsWith(searchTerm);
       const bStarts = b.title.toLowerCase().startsWith(searchTerm);
       if (aStarts && !bStarts) return -1;
       if (!aStarts && bStarts) return 1;
-      
+
       return 0;
     });
 
