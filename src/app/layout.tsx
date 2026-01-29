@@ -21,8 +21,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Cortexa",
-  description: "Application Next.js avec système d'authentification complet",
+  description: "Cortexa - Votre second cerveau intelligent",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
