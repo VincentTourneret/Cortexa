@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/lib/s3";
 import { v4 as uuidv4 } from "uuid";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export async function POST(req: NextRequest) {
     try {
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ success: 0, message: "Unauthorized" }, { status: 401 });
+        }
+
         const formData = await req.formData();
         const file = formData.get("image") as File;
 
@@ -14,7 +22,7 @@ export async function POST(req: NextRequest) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const fileExtension = file.name.split(".").pop();
-        const fileName = `${uuidv4()}.${fileExtension}`;
+        const fileName = `${session.user.id}/${uuidv4()}.${fileExtension}`;
         const bucketName = process.env.S3_BUCKET || "app";
 
         await s3Client.send(

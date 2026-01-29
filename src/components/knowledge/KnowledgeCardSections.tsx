@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useState, useCallback, useEffect } from "react";
-import { Plus, Save, Eye, Edit } from "lucide-react";
+import { Plus, Save, Eye, Edit, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -71,7 +71,9 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
   const [sectionEditorDataMap, setSectionEditorDataMap] = useState<Map<string, EditorJSData>>(new Map());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<Map<string, boolean>>(new Map());
+  const [fullScreenSectionId, setFullScreenSectionId] = useState<string | null>(null);
 
   // Mettre à jour l'activeTab quand les sections changent
   useEffect(() => {
@@ -286,6 +288,28 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
     };
   }, [activeTab, editingSections, handleSaveSection]);
 
+  const toggleFullScreen = (sectionId: string) => {
+    if (fullScreenSectionId === sectionId) {
+      setFullScreenSectionId(null);
+    } else {
+      setFullScreenSectionId(sectionId);
+    }
+  };
+
+  // Raccourci clavier pour quitter le plein écran (Esc)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && fullScreenSectionId) {
+        setFullScreenSectionId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [fullScreenSectionId]);
+
   return (
     <div className="space-y-6">
       {/* Message d'erreur global */}
@@ -338,30 +362,48 @@ const KnowledgeCardSectionsComponent: React.FC<KnowledgeCardSectionsProps> = ({
               const sectionData = sectionEditorDataMap.get(section.id) || getSectionEditorData(section);
               const isEditing = editingSections.has(section.id);
               const sectionHasChanges = hasUnsavedChanges.get(section.id) || false;
+              const isFullScreen = fullScreenSectionId === section.id;
 
               return (
                 <TabsContent key={section.id} value={section.id}>
-                  <div className="space-y-4">
+                  <div className={isFullScreen ? "fixed inset-0 z-50 flex flex-col bg-background p-6 overflow-y-auto" : "space-y-4"}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <h4 className="text-base font-semibold text-card-foreground">
                           {section.title}
                         </h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleEditMode(section.id)}
-                          className="h-8 w-8 p-0"
-                          aria-label={isEditing ? "Mode visualisation" : "Mode édition"}
-                          title={isEditing ? "Passer en mode visualisation" : "Passer en mode édition"}
-                        >
-                          {isEditing ? (
-                            <Edit className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleFullScreen(section.id)}
+                            className="h-8 w-8 p-0"
+                            aria-label={isFullScreen ? "Quitter le plein écran" : "Passer en plein écran"}
+                            title={isFullScreen ? "Quitter le plein écran" : "Passer en plein écran"}
+                          >
+                            {isFullScreen ? (
+                              <Minimize className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <Maximize className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleEditMode(section.id)}
+                            className="h-8 w-8 p-0"
+                            aria-label={isEditing ? "Mode visualisation" : "Mode édition"}
+                            title={isEditing ? "Passer en mode visualisation" : "Passer en mode édition"}
+                          >
+                            {isEditing ? (
+                              <Edit className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         Modifié le{" "}
