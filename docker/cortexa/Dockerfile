@@ -24,6 +24,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# DATABASE_URL requis par Prisma au build (prisma generate). Valeur factice suffisante car on ne se connecte pas.
+ARG DATABASE_URL=postgresql://cortexa:cortexa_password@localhost:5433/cortexa_db?schema=public
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
