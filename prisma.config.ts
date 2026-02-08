@@ -1,4 +1,10 @@
-import "dotenv/config";
+// Chargement optionnel : en production (Docker/CapRover), dotenv n'est pas installé, les vars sont injectées au runtime
+try {
+  require("dotenv/config");
+} catch {
+  /* dotenv non disponible */
+}
+
 import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
