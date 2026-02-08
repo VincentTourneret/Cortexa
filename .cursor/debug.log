@@ -1,0 +1,4 @@
+{"location":"mail.ts:module-load","message":"Brevo env at module load","data":{"hasKey":true,"keyLen":89,"keyPrefixOk":true,"hasSender":true},"timestamp":1770549179279,"hypothesisId":"A"}
+{"location":"forgot-password/route.ts:beforeSend","message":"Env in API route before send","data":{"hasKey":true,"keyLen":89,"keyPrefixOk":true,"nodeEnv":"development"},"timestamp":1770549179335,"hypothesisId":"D"}
+{"location":"mail.ts:sendPasswordResetEmail","message":"Brevo env at call time","data":{"hasKey":true,"keyLen":89,"keyPrefixOk":true,"hasSender":true},"timestamp":1770549179337,"hypothesisId":"B"}
+{"location":"mail.ts:beforeBrevo","message":"Before sendTransacEmail, key re-set","data":{"keyLen":89},"timestamp":1770549179338,"hypothesisId":"E"}

@@ -1,23 +1,24 @@
 FROM chrislusf/seaweedfs:latest
 
-# 1. Variables pour l'Admin Global
-ENV ADMIN_KEY=${ADMIN_KEY}
-ENV ADMIN_SECRET=${ADMIN_SECRET}
-
-# 2. Variables pour le Bucket "app"
-ENV APP_KEY=${APP_KEY}
-ENV APP_SECRET=${APP_SECRET}
-
-# On expose les ports
-EXPOSE 8333 9333 8888
-
-# On copie le template de configuration et le script d'entrée
-COPY config.json /data/config.json.template
-COPY entrypoint.sh /entrypoint.sh
-
-# On rend le script exécutable
-# Note: seaweedfs image might not have 'chmod' in standard path or use a different user
 USER root
+
+# Installation de envsubst (disponible dans le paquet gettext)
+RUN apk add --no-cache gettext
+
+# Préparation des dossiers
+RUN mkdir -p /etc/seaweedfs /data && \
+    chown -R seaweed:seaweed /etc/seaweedfs /data
+
+# Copie du template et du script
+COPY --chown=seaweed:seaweed ./config.json /etc/seaweedfs/s3.json.template
+COPY --chown=seaweed:seaweed entrypoint.sh /entrypoint.sh
+
 RUN chmod +x /entrypoint.sh
 
+USER seaweed
+
+# On définit notre script comme point d'entrée
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Commande par défaut
+CMD ["server", "-dir=/data", "-s3", "-s3.config=/etc/seaweedfs/s3.json"]

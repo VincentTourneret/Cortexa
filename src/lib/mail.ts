@@ -1,14 +1,23 @@
-import nodemailer from "nodemailer";
+import {
+  TransactionalEmailsApi,
+  TransactionalEmailsApiApiKeys,
+  SendSmtpEmail,
+} from "@getbrevo/brevo";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const apiInstance = new TransactionalEmailsApi();
+apiInstance.setApiKey(
+  TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY || ""
+);
+
+const getSender = () => {
+  const from = process.env.BREVO_SENDER_EMAIL;
+  const name = process.env.BREVO_SENDER_NAME || "Cortexa Support";
+  if (!from) {
+    throw new Error("BREVO_SENDER_EMAIL est requis. Configurez-le dans .env.local");
+  }
+  return { name, email: from };
+};
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
@@ -27,12 +36,13 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || '"Cortexa Support" <noreply@example.com>',
-    to: email,
-    subject: "Confirmation de votre compte Cortexa",
-    html,
-  });
+  const sendSmtpEmail = new SendSmtpEmail();
+  sendSmtpEmail.subject = "Confirmation de votre compte Cortexa";
+  sendSmtpEmail.htmlContent = html;
+  sendSmtpEmail.sender = getSender();
+  sendSmtpEmail.to = [{ email }];
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
@@ -51,12 +61,13 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || '"Cortexa Support" <noreply@example.com>',
-    to: email,
-    subject: "Réinitialisation de votre mot de passe Cortexa",
-    html,
-  });
+  const sendSmtpEmail = new SendSmtpEmail();
+  sendSmtpEmail.subject = "Réinitialisation de votre mot de passe Cortexa";
+  sendSmtpEmail.htmlContent = html;
+  sendSmtpEmail.sender = getSender();
+  sendSmtpEmail.to = [{ email }];
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
 
 export const sendGroupInvitationEmail = async (email: string, groupName: string, inviteLink: string) => {
@@ -74,12 +85,13 @@ export const sendGroupInvitationEmail = async (email: string, groupName: string,
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || '"Cortexa Support" <noreply@example.com>',
-    to: email,
-    subject: `Invitation à rejoindre le groupe ${groupName}`,
-    html,
-  });
+  const sendSmtpEmail = new SendSmtpEmail();
+  sendSmtpEmail.subject = `Invitation à rejoindre le groupe ${groupName}`;
+  sendSmtpEmail.htmlContent = html;
+  sendSmtpEmail.sender = getSender();
+  sendSmtpEmail.to = [{ email }];
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
 
 export const sendShareInvitationEmail = async (email: string, resourceName: string, inviteLink: string, isFolder: boolean) => {
@@ -98,10 +110,11 @@ export const sendShareInvitationEmail = async (email: string, resourceName: stri
     </div>
   `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || '"Cortexa Support" <noreply@example.com>',
-    to: email,
-    subject: `Partage de document : ${resourceName}`,
-    html,
-  });
+  const sendSmtpEmail = new SendSmtpEmail();
+  sendSmtpEmail.subject = `Partage de document : ${resourceName}`;
+  sendSmtpEmail.htmlContent = html;
+  sendSmtpEmail.sender = getSender();
+  sendSmtpEmail.to = [{ email }];
+
+  await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
