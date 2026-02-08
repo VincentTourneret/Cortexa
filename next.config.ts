@@ -6,9 +6,8 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
-
-  turbopack: {}
+  output: "standalone",
+  turbopack: {},
 };
 
 export default withPWA(nextConfig);
