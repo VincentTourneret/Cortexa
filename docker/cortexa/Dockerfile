@@ -58,15 +58,16 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema and migrations for migrate deploy
+# Copy Prisma schema, config and migrations for migrate deploy (Prisma 7 nécessite prisma.config.ts pour datasource.url)
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/package.json ./package.json
 
 # Install Prisma CLI for migrations (nécessaire pour prisma migrate deploy)
 RUN npm install prisma --omit=dev
 
 # Chown pour que l'utilisateur nextjs puisse exécuter prisma
-RUN chown -R nextjs:nodejs /app/node_modules /app/prisma /app/package.json
+RUN chown -R nextjs:nodejs /app/node_modules /app/prisma /app/package.json /app/prisma.config.ts
 
 # Entrypoint : migrations puis démarrage de l'app
 COPY --from=builder /app/docker/cortexa/entrypoint.sh /entrypoint.sh

@@ -6,8 +6,6 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ThemeScript } from "@/components/providers/ThemeScript";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { MobileNavbar } from "@/components/navigation/MobileNavbar";
-import { Sidebar } from "@/components/navigation/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,13 +59,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <ThemeProvider>
-              <div className="flex min-h-screen">
-                <Sidebar />
-                <main className="flex-1 md:ml-64 ">
-                  {children}
-                </main>
-              </div>
-              <MobileNavbar />
+              {children}
             </ThemeProvider>
           </AuthProvider>
         </QueryProvider>
